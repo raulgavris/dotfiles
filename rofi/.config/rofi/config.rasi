@@ -4,4 +4,4 @@ configuration {
   show-icons:         true;
   icon-theme:         "Papirus";
 }
-@theme "/home/rg/.local/share/rofi/themes/onedark.rasi"
+@theme "/home/rg/.config/rofi/themes/onedark.rasi"
