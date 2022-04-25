@@ -406,5 +406,6 @@ awful.spawn.with_shell("picom --config ~/.config/picom/picom.conf --experimental
 awful.spawn.with_shell("feh --bg-scale --randomize /home/rg/.wallpapers")
 -- awful.spawn.with_shell("/home/rg/.config/polybar/launch.sh --material")
 awful.spawn.with_shell("/home/rg/.config/eww/bar/launch_bar.sh")
+awful.spawn.with_shell("trayer --edge top --align right --expand true --width 5px --transparent true --alpha 255 --distance 8px --margin 650px")
 -- awful.spawn.with_shell("/home/rg/.config/polybar/material/scripts/pywal.sh /home/rg/.wallpapers/sherlock.jpg")
 awful.spawn.with_shell("mine_xautolock")
