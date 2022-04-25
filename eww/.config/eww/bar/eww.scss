@@ -1,0 +1,89 @@
+/** Global *******************************************/
+*{
+	all: unset;
+	font-family: feather;
+	font-family: Iosevka;
+}
+
+/** Background ***************************************/
+.bg {
+	background-color: #474D59;
+	opacity: 1;
+}
+
+/** Generic window ***********************************/
+.genwin {
+	background-color: #2E3440;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+/** System ********************************************/
+.iconcpu, .iconmem, .iconbright, .iconbat, .iconvol {
+	font-size : 20px;
+	font-weight : normal;
+}
+.iconcpu {
+	color: #BF616A;
+}
+.iconmem {
+	color: #A3BE8C;
+}
+.iconbright {
+	color: #EBCB8B;
+}
+.iconbat {
+	color: #88C0D0;
+}
+
+.iconvol {
+  color: #d0a488;
+}
+
+.cpu_bar, .mem_bar, .bright_bar, .bat_bar, .vol_bar, scale trough {
+	all: unset;
+	background-color: #3A404C;
+	// border-radius: 5px;
+	min-height: 10px;
+	min-width: 50px;
+}
+
+.cpu_bar, .mem_bar, .bright_bar, .bat_bar, .vol_bar, scale trough highlight {
+	all: unset;
+	// border-radius: 5px;
+}
+
+.cpu_bar scale trough highlight {
+	background-color: #BF616A;
+}
+.mem_bar scale trough highlight {
+	background-color: #A3BE8C;
+}
+.bright_bar scale trough highlight {
+	background-color: #EBCB8B;
+}
+.bat_bar scale trough highlight {
+	background-color: #88C0D0;
+}
+.vol_bar scale trough highlight {
+	background-color: #d0a488;
+}
+
+/** Workspaces ********************************************/
+.workspace0, .workspace1, .workspace2, .workspace3, .workspace4, .workspace5, .workspace6, .workspace7, .workspace8 {
+  font-size: 20px;
+  padding-right: 10px;
+//   border: 1px solid black;
+}
+
+.active_wsp {
+	color: #BF616A;
+}
+
+.full_wsp {
+	color: #88C0D0;
+}
+
+.inactive_wsp {
+	color: #A3BE8C;
+}
