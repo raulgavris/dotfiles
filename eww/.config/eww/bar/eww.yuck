@@ -44,13 +44,13 @@
 				(scale :min 0 :max 100 :value MEM_USAGE :active "false"))
 			(box :class "bright_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
 				(label :class "iconbright" :text "")
-				(scale :min 0 :max 100 :value BLIGHT :active "false"))
+				(scale :min 0 :max 100 :value BLIGHT :active "true" :onchange "brightnessctl set {}%" ))
 			(box :class "bat_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
 				(label :class "iconbat" :text "")
 				(scale :min 0 :max 100 :value BATTERY :active "false"))
       (box :class "vol_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
 				(label :class "iconvol" :text "")
-				(scale :min 0 :max 100 :value VOLUME :active "false")))))
+				(scale :min 0 :max 100 :value VOLUME :active "true" :onchange "")))))
 
 (defwidget music []
   (box :class "music"
@@ -91,17 +91,67 @@
   )
 )
 
+; (defvar var false)
+; (defwidget right []
+;   (eventbox :onhover "/usr/local/bin/eww update var=true"   
+;   			:onhoverlost "/usr/local/bin/eww update var=false"
+;         :class "eventbox"
+;   			(box    :orientation "h"  
+; 			  		:space-evenly "false"  
+; 					:spacing 2
+;   			(revealer :transition "slideleft" 
+; 			  		  :reveal var   
+; 					  :duration "550ms"
+;           "reveal")
+;   			(label :class "brightness-icon" 
+; 			  	   :text "label"))))
+
+(defwidget clock []
+  (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
+    HOURDATE "|"
+  )
+)
+
+(defwidget uptime []
+  (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
+    UPTIME "| "
+  )
+)
+
+(defwidget memoryfree []
+  (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
+    FREE "| "
+  )
+)
+
+(defwidget updates []
+  (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
+    " "UPDATES "| "
+  )
+)
+
+(defwidget wifi []
+  (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
+    " "WIFI "| "
+  )
+)
+
+(defwidget powermenu []
+  (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
+    " "
+  )
+)
 ;; info
 (defwidget right []
   (box :class "genwin" :vexpand "false" :hexpand "false" 
     (box :class "right" :orientation "h" :space-evenly false :halign "end" :spacing 1
       (box :orientation "h" :spacing 5 :space-evenly false :halign "end"
-      HOURDATE "|"
-      UPTIME "| "
-      FREE "| "
-      " "UPDATES "| "
-      " "WIFI "| "
-      " "
+      (clock)
+      (uptime)
+      (memoryfree)
+      (updates)
+      (wifi)
+      (powermenu)
       )
     )
   )
