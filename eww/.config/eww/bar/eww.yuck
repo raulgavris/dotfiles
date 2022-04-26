@@ -37,20 +37,20 @@
 	(box :class "genwin" :vexpand "false" :hexpand "false" 
 		(box :orientation "h" :spacing 5 :halign "center" :valign "center" :space-evenly "false" :vexpand "false" :hexpand "false" 
 			(box :class "cpu_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
-				(label :class "iconcpu" :text "")
-				(scale :min 0 :max 100 :value CPU_USAGE :active "false"))
+				(label :class "iconcpu" :text "" :tooltip "CPU usage is at ${CPU_USAGE}%")
+				(scale :min 0 :max 100 :value CPU_USAGE :active "false" :tooltip "CPU usage is at ${CPU_USAGE}%"))
 			(box :class "mem_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
-				(label :class "iconmem" :text "")
-				(scale :min 0 :max 100 :value MEM_USAGE :active "false"))
+				(label :class "iconmem" :text "" :tooltip "Memory usage is at ${MEM_USAGE}%")
+				(scale :min 0 :max 100 :value MEM_USAGE :active "false" :tooltip "Memory usage is at ${MEM_USAGE}%"))
 			(box :class "bright_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
-				(label :class "iconbright" :text "")
-				(scale :min 0 :max 100 :value BLIGHT :active "true" :onchange "brightnessctl set {}%" ))
+				(label :class "iconbright" :text "" :tooltip "Brightness is at ${BLIGHT}%")
+				(scale :min 0 :max 100 :value BLIGHT :active "true" :onchange "brightnessctl set {}%" :tooltip "Brightness is at ${BLIGHT}%" ))
 			(box :class "bat_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
-				(label :class "iconbat" :text "")
-				(scale :min 0 :max 100 :value BATTERY :active "false"))
+				(label :class "iconbat" :text "" :tooltip "Battery is at ${BATTERY}%")
+				(scale :min 0 :max 100 :value BATTERY :active "false" :tooltip "Battery is at ${BATTERY}%"))
       (box :class "vol_bar" :orientation "h" :spacing 5 :space-evenly "false" :vexpand "false" :hexpand "false" 
-				(label :class "iconvol" :text "")
-				(scale :min 0 :max 100 :value VOLUME :active "true" :onchange "")))))
+				(label :class "iconvol" :text "" :tooltip "Volume is at ${VOLUME}%")
+				(scale :min 0 :max 100 :value VOLUME :active "true" :tooltip "Volume is at ${VOLUME}%")))))
 
 (defwidget music []
   (box :class "music"
