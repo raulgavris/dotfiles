@@ -18,6 +18,8 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
 
+require("collision")()
+
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
 -- another config (This code will only ever execute for the fallback config)
@@ -100,14 +102,14 @@ awful.keyboard.append_global_keybindings({
               {description = "quit awesome", group = "awesome"}),
     awful.key({ modkey,           }, "Return", function () awful.spawn(terminal) end,
               {description = "open a terminal", group = "launcher"}),
-    awful.key({ modkey },            "r",     function () awful.spawn("rofi -show run") end,
+    awful.key({ modkey },            "`",     function () awful.spawn("rofi -show run") end,
               {description = "run rofi", group = "launcher"}),
     awful.key({ modkey },            "p",     function ()
         os.execute("scrot ~/Pictures/Screenshots/date:%b-%d_hour:%H-minute:%M-second:%S.png")
         naughty.notify({ title = "Screenshot!", text = "Screenshot was taken in ~/Pictures/Screenshots", timeout = 3 })
         end,
               {description = "make screenshot", group = "launcher"}),
-    awful.key({ modkey },            "l",     function () os.execute("lock") end,
+    awful.key({ modkey },            "\\",     function () os.execute("lock") end,
               {description = "lock screen", group = "launcher"}),
     awful.key({}, "XF86MonBrightnessDown", function () os.execute("brightnessctl set 1%-") end,
               {description = "brightness down", group = "client"}),
