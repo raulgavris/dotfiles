@@ -1,2 +1,2 @@
-require("raul.core")
-require("raul.lazy")
+require("core")
+require("lazy")
