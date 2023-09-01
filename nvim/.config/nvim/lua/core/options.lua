@@ -12,7 +12,7 @@ local options = {
     smartindent = true, -- make indenting smarter again
     splitbelow = true, -- force all horizontal splits to go below current window
     splitright = true, -- force all vertical splits to go to the right of current window
-    swapfile = true, -- creates a swapfile
+    swapfile = false, -- creates a swapfile
     timeoutlen = 500, -- time to wait for a mapped sequence to complete (in milliseconds)
     undofile = true, -- enable persistent undo
     updatetime = 100, -- faster completion (4000ms default)
@@ -33,6 +33,8 @@ local options = {
     foldenable = true,
     foldlevel = 99,
     foldlevelstart = 99,
+    background = "dark", -- colorschemes that can be light or dark will be made dark
+    backspace = "indent,eol,start", -- allow backspace on indent, end of line or insert mode start position
     foldmethod = "indent",
     fillchars = {
         eob = " ",
@@ -57,9 +59,11 @@ local global = {
     mapleader = " " -- Set mapleader to space
 }
 
-vim.opt.shortmess:append "Ac" -- Disable asking when editing file with swapfile.
-vim.opt.whichwrap:append "<,>,[,],h,l"
-vim.opt.iskeyword:append "-"
+local opt = vim.opt
+opt.shortmess:append "Ac" -- Disable asking when editing file with swapfile.
+opt.whichwrap:append "<,>,[,],h,l"
+opt.iskeyword:append "-"
+opt.clipboard:append("unnamedplus") -- use system clipboard as default register
 
 set_option(options)
 set_global(global)
