@@ -1,6 +1,7 @@
 {
   "cmp-nvim-lsp": { "branch": "main", "commit": "44b16d11215dce86f253ce0c30949813c0a90765" },
   "copilot.vim": { "branch": "release", "commit": "172955782814a49fbebca2d1a2ccce2059103329" },
+  "gitsigns.nvim": { "branch": "main", "commit": "44adf808ace6cb65a3353bd61fa585a2d8fe0db3" },
   "harpoon": { "branch": "master", "commit": "21f4c47c6803d64ddb934a5b314dcb1b8e7365dc" },
   "inc-rename.nvim": { "branch": "main", "commit": "ed0f6f2b917cac4eb3259f907da0a481b27a3b7e" },
   "lazy.nvim": { "branch": "main", "commit": "2a9354c7d2368d78cbd5575a51a2af5bd8a6ad01" },
