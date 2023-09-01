@@ -12,7 +12,7 @@ require("lazy").setup({{
     import = "plugins.lsp"
 }}, {
     install = {
-        colorscheme = {"nightfly"}
+        colorscheme = {"onedark"}
     },
     checker = {
         enabled = true,
