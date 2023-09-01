@@ -126,25 +126,25 @@ local keymaps = {
             desc = "Go to next buffer"
         },
 
-        ["<Left>"] = {
-            cmd = ":tabprevious<CR>",
-            desc = "Go to previous tab"
-        },
+        -- ["<Left>"] = {
+        --     cmd = ":tabprevious<CR>",
+        --     desc = "Go to previous tab"
+        -- },
 
-        ["<Right>"] = {
-            cmd = ":tabnext<CR>",
-            desc = "Go to next tab"
-        },
+        -- ["<Right>"] = {
+        --     cmd = ":tabnext<CR>",
+        --     desc = "Go to next tab"
+        -- },
 
-        ["<Up>"] = {
-            cmd = ":tabnew<CR>",
-            desc = "New tab"
-        },
+        -- ["<Up>"] = {
+        --     cmd = ":tabnew<CR>",
+        --     desc = "New tab"
+        -- },
 
-        ["<Down>"] = {
-            cmd = ":tabclose<CR>",
-            desc = "Close tab"
-        },
+        -- ["<Down>"] = {
+        --     cmd = ":tabclose<CR>",
+        --     desc = "Close tab"
+        -- },
 
         ["<"] = {
             cmd = "<<",
@@ -173,14 +173,14 @@ local keymaps = {
         --   desc = "Enter insert mode",
         -- },
 
-        ["<A-j>"] = {
+        ["<leader><Down>"] = {
             cmd = "<Esc>:m .+1<CR>==gi",
-            desc = "Move the line up"
+            desc = "Move the down up"
         },
 
-        ["<A-k>"] = {
+        ["<leader><Up>"] = {
             cmd = "<Esc>:m .-2<CR>==gi",
-            desc = "Move the line down"
+            desc = "Move the up down"
         }
     },
     terminal_mode = {
@@ -283,6 +283,8 @@ local keymaps = {
         }
     }
 }
+
+vim.g.mapleader = " "
 
 set_keymaps(keymaps.normal_mode, modes.normal_mode)
 set_keymaps(keymaps.insert_mode, modes.insert_mode)
