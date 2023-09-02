@@ -1,287 +1,224 @@
 local fn = vim.fn
 
 local modes = {
-    normal_mode = "n",
-    insert_mode = "i",
-    terminal_mode = "t",
-    visual_mode = "v",
-    visual_block_mode = "x",
-    command_mode = "c"
+	normal_mode = "n",
+	insert_mode = "i",
+	terminal_mode = "t",
+	visual_mode = "v",
+	visual_block_mode = "x",
+	command_mode = "c",
 }
 
 local function close()
-    if vim.bo.buftype == "terminal" then
-        vim.cmd "Bdelete!"
-        vim.cmd "silent! close"
-    elseif #vim.api.nvim_list_wins() > 1 then
-        vim.cmd "silent! close"
-    else
-        vim.notify("Can't Close Window", vim.log.levels.WARN, {
-            title = "Close Window"
-        })
-    end
+	if vim.bo.buftype == "terminal" then
+		vim.cmd("Bdelete!")
+		vim.cmd("silent! close")
+	elseif #vim.api.nvim_list_wins() > 1 then
+		vim.cmd("silent! close")
+	else
+		vim.notify("Can't Close Window", vim.log.levels.WARN, {
+			title = "Close Window",
+		})
+	end
 end
 
 local function forward_search()
-    if fn.getcmdtype() == "/" or fn.getcmdtype() == "?" then
-        return "<CR>/<C-r>/"
-    end
-    return "<C-z>"
+	if fn.getcmdtype() == "/" or fn.getcmdtype() == "?" then
+		return "<CR>/<C-r>/"
+	end
+	return "<C-z>"
 end
 
 local function backward_search()
-    if fn.getcmdtype() == "/" or fn.getcmdtype() == "?" then
-        return "<CR>?<C-r>/"
-    end
-    return "<S-Tab>"
+	if fn.getcmdtype() == "/" or fn.getcmdtype() == "?" then
+		return "<CR>?<C-r>/"
+	end
+	return "<S-Tab>"
 end
 
 local keymaps = {
-    normal_mode = {
+	normal_mode = {
 
-        ["<F5>"] = {
-            cmd = run_code,
-            desc = "Run Code"
-        },
+		["<F5>"] = {
+			cmd = run_code,
+			desc = "Run Code",
+		},
+		["j"] = {
+			cmd = "v:count == 0 ? 'gj' : 'j'",
+			desc = "Better Down",
+			opt = {
+				expr = true,
+				silent = true,
+			},
+		},
 
-        -- ["jk"] = {
-        --   cmd = "<Esc>",
-        --   desc = "Enter insert mode",
-        -- },
+		["k"] = {
+			cmd = "v:count == 0 ? 'gk' : 'k'",
+			desc = "Better Up",
+			opt = {
+				expr = true,
+				silent = true,
+			},
+		},
+		["<C-e>"] = {
+			cmd = ":NvimTreeToggle<CR>",
+			desc = "Open File Explorer",
+			opt = {
+				silent = true,
+			},
+		},
+		["<C-f>"] = {
+			cmd = ":Telescope live_grep<CR>",
+			desc = "Open Fuzzy Finding",
+			opt = {
+				silent = true,
+			},
+		},
+		["<C-p>"] = {
+			cmd = ":Telescope find_files<CR>",
+			desc = "Open File Finding",
+			opt = {
+				silent = true,
+			},
+		},
+		["<C-g>s"] = {
+			cmd = ":Telescope git_status<CR>",
+			desc = "Show git status",
+			opt = {
+				silent = true,
+			},
+		},
+		["<C-g>b"] = {
+			cmd = ":Telescope git_branches<CR>",
+			desc = "Show git branches",
+			opt = {
+				silent = true,
+			},
+		},
+		["<C-q>"] = {
+			cmd = close,
+			desc = "Close window",
+		},
+		["<C-Left>"] = {
+			cmd = ":bprevious<CR>",
+			desc = "Go to previous buffer",
+		},
+		["<C-Right>"] = {
+			cmd = ":bnext<CR>",
+			desc = "Go to next buffer",
+		},
+		["<S-Tab>"] = {
+			cmd = "<<",
+			desc = "Indent backward",
+		},
+		["<Tab>"] = {
+			cmd = ">>",
+			desc = "Indent forward",
+		},
+		["<A-Up>"] = {
+			cmd = ":m .+1<CR>==",
+			desc = "Move the line up",
+		},
+		["<A-Down>"] = {
+			cmd = ":m .-2<CR>==",
+			desc = "Move the line down",
+		},
+	},
+	insert_mode = {},
+	terminal_mode = {
 
-        ["j"] = {
-            cmd = "v:count == 0 ? 'gj' : 'j'",
-            desc = "Better Down",
-            opt = {
-                expr = true,
-                silent = true
-            }
-        },
+		["<Esc>"] = {
+			cmd = "<C-\\><C-n>",
+			desc = "Enter insert mode",
+		},
+	},
+	visual_mode = {
 
-        ["k"] = {
-            cmd = "v:count == 0 ? 'gk' : 'k'",
-            desc = "Better Up",
-            opt = {
-                expr = true,
-                silent = true
-            }
-        },
+		["j"] = {
+			cmd = "v:count == 0 ? 'gj' : 'j'",
+			desc = "Better Down",
+			opt = {
+				expr = true,
+				silent = true,
+			},
+		},
 
-        ["<C-j>"] = {
-            cmd = "<C-w>j",
-            desc = "Go to upper window"
-        },
+		["k"] = {
+			cmd = "v:count == 0 ? 'gk' : 'k'",
+			desc = "Better Up",
+			opt = {
+				expr = true,
+				silent = true,
+			},
+		},
 
-        ["<C-k>"] = {
-            cmd = "<C-w>k",
-            desc = "Go to lower window"
-        },
+		["p"] = {
+			cmd = '"_dP',
+			desc = "Better Paste",
+		},
 
-        ["<C-h>"] = {
-            cmd = "<C-w>h",
-            desc = "Go to left window"
-        },
+		["<S-Tab>"] = {
+			cmd = "<gv",
+			desc = "Indent backward",
+		},
 
-        ["<C-l>"] = {
-            cmd = "<C-w>l",
-            desc = "Go to right window"
-        },
+		["<Tab>"] = {
+			cmd = ">gv",
+			desc = "Indent forward",
+		},
 
-        -- ["<Leader>w"] = {
-        --   cmd = "<C-w>w",
-        --   desc = "Go to next window",
-        -- },
+		["<A-Up>"] = {
+			cmd = ":m '>+1<CR>gv=gv",
+			desc = "Move the selected text up",
+		},
 
-        [";"] = {
-            cmd = close,
-            desc = "Close window"
-        },
+		["<A-Down>"] = {
+			cmd = ":m '<-2<CR>gv=gv",
+			desc = "Move the selected text down",
+		},
+	},
+	visual_block_mode = {
 
-        ["<C-Up>"] = {
-            cmd = ":resize +2<CR>",
-            desc = "Add size at the top"
-        },
+		["j"] = {
+			cmd = "v:count == 0 ? 'gj' : 'j'",
+			desc = "Better Down",
+			opt = {
+				expr = true,
+				silent = true,
+			},
+		},
 
-        ["<C-Down>"] = {
-            cmd = ":resize -2<CR>",
-            desc = "Add size at the bottom"
-        },
+		["k"] = {
+			cmd = "v:count == 0 ? 'gk' : 'k'",
+			desc = "Better Up",
+			opt = {
+				expr = true,
+				silent = true,
+			},
+		},
 
-        ["<C-Left>"] = {
-            cmd = ":vertical resize +2<CR>",
-            desc = "Add size at the left"
-        },
+		["<A-Up>"] = {
+			cmd = ":m '>+1<CR>gv=gv",
+			desc = "Move the selected text up",
+		},
 
-        ["<C-Right>"] = {
-            cmd = ":vertical resize -2<CR>",
-            desc = "Add size at the right"
-        },
+		["<A-Down>"] = {
+			cmd = ":m '<-2<CR>gv=gv",
+			desc = "Move the selected text down",
+		},
+	},
+	command_mode = {
 
-        ["H"] = {
-            cmd = ":bprevious<CR>",
-            desc = "Go to previous buffer"
-        },
-        ["L"] = {
-            cmd = ":bnext<CR>",
-            desc = "Go to next buffer"
-        },
+		["<Tab>"] = {
+			cmd = forward_search,
+			desc = "Word Search Increment",
+		},
 
-        -- ["<Left>"] = {
-        --     cmd = ":tabprevious<CR>",
-        --     desc = "Go to previous tab"
-        -- },
-
-        -- ["<Right>"] = {
-        --     cmd = ":tabnext<CR>",
-        --     desc = "Go to next tab"
-        -- },
-
-        -- ["<Up>"] = {
-        --     cmd = ":tabnew<CR>",
-        --     desc = "New tab"
-        -- },
-
-        -- ["<Down>"] = {
-        --     cmd = ":tabclose<CR>",
-        --     desc = "Close tab"
-        -- },
-
-        ["<"] = {
-            cmd = "<<",
-            desc = "Indent backward"
-        },
-
-        [">"] = {
-            cmd = ">>",
-            desc = "Indent forward"
-        },
-
-        ["<A-j>"] = {
-            cmd = ":m .+1<CR>==",
-            desc = "Move the line up"
-        },
-
-        ["<A-k>"] = {
-            cmd = ":m .-2<CR>==",
-            desc = "Move the line down"
-        }
-    },
-    insert_mode = {
-
-        -- ["jk"] = {
-        --   cmd = "<Esc>",
-        --   desc = "Enter insert mode",
-        -- },
-
-        ["<leader><Down>"] = {
-            cmd = "<Esc>:m .+1<CR>==gi",
-            desc = "Move the down up"
-        },
-
-        ["<leader><Up>"] = {
-            cmd = "<Esc>:m .-2<CR>==gi",
-            desc = "Move the up down"
-        }
-    },
-    terminal_mode = {
-
-        ["<Esc>"] = {
-            cmd = "<C-\\><C-n>",
-            desc = "Enter insert mode"
-        }
-    },
-    visual_mode = {
-
-        ["j"] = {
-            cmd = "v:count == 0 ? 'gj' : 'j'",
-            desc = "Better Down",
-            opt = {
-                expr = true,
-                silent = true
-            }
-        },
-
-        ["k"] = {
-            cmd = "v:count == 0 ? 'gk' : 'k'",
-            desc = "Better Up",
-            opt = {
-                expr = true,
-                silent = true
-            }
-        },
-
-        ["p"] = {
-            cmd = '"_dP',
-            desc = "Better Paste"
-        },
-
-        -- ["jk"] = {
-        --   cmd = "<Esc>",
-        --   desc = "Enter insert mode",
-        -- },
-
-        ["<"] = {
-            cmd = "<gv",
-            desc = "Indent backward"
-        },
-
-        [">"] = {
-            cmd = ">gv",
-            desc = "Indent forward"
-        },
-
-        ["<A-j>"] = {
-            cmd = ":m '>+1<CR>gv=gv",
-            desc = "Move the selected text up"
-        },
-
-        ["<A-k>"] = {
-            cmd = ":m '<-2<CR>gv=gv",
-            desc = "Move the selected text down"
-        }
-    },
-    visual_block_mode = {
-
-        ["j"] = {
-            cmd = "v:count == 0 ? 'gj' : 'j'",
-            desc = "Better Down",
-            opt = {
-                expr = true,
-                silent = true
-            }
-        },
-
-        ["k"] = {
-            cmd = "v:count == 0 ? 'gk' : 'k'",
-            desc = "Better Up",
-            opt = {
-                expr = true,
-                silent = true
-            }
-        },
-
-        ["<A-j>"] = {
-            cmd = ":m '>+1<CR>gv=gv",
-            desc = "Move the selected text up"
-        },
-
-        ["<A-k>"] = {
-            cmd = ":m '<-2<CR>gv=gv",
-            desc = "Move the selected text down"
-        }
-    },
-    command_mode = {
-
-        ["<Tab>"] = {
-            cmd = forward_search,
-            desc = "Word Search Increment"
-        },
-
-        ["<S-Tab>"] = {
-            cmd = backward_search,
-            desc = "Word Search Decrement"
-        }
-    }
+		["<S-Tab>"] = {
+			cmd = backward_search,
+			desc = "Word Search Decrement",
+		},
+	},
 }
 
 vim.g.mapleader = " "
@@ -292,7 +229,6 @@ set_keymaps(keymaps.terminal_mode, modes.terminal_mode)
 set_keymaps(keymaps.visual_mode, modes.visual_mode)
 set_keymaps(keymaps.visual_block_mode, modes.visual_block_mode)
 set_keymaps(keymaps.command_mode, modes.command_mode)
-
 
 -- window management
 -- keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" }) -- split window vertically

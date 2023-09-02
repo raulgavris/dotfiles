@@ -1,15 +1,18 @@
 if vim.g.vscode then
-  require "core.options"
+	require("core.options")
 else
-  local name = "onedark"
+	vim.g.loaded_netrw = 1
+	vim.g.loaded_netrwPlugin = 1
 
-  require "core"
-  require "pluginsloader"
+	local name = "gruvbox"
 
-  -- Check for theme configuration
-  -- Theme configs are can be found on lua/plugins/theme
-  pcall(require, "plugins.theme." .. name)
+	require("core")
+	require("pluginsloader")
 
-  -- Set the theme
-  vim.cmd.colorscheme(name)
+	-- Check for theme configuration
+	-- Theme configs are can be found on lua/plugins/theme
+	pcall(require, "plugins.theme." .. name)
+
+	-- Set the theme
+	vim.cmd.colorscheme(name)
 end
