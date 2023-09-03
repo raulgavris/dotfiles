@@ -4,7 +4,10 @@ fi
 
 fortune | cowsay -f $(ls /opt/homebrew/Cellar/cowsay/3.04_1/share/cows | gshuf -n1) | lolcat
 
-export PATH=$HOME/bin:/usr/bin:$PATH
+
+
+
+export PATH=$HOME/.local/bin:$HOME/bin:/usr/bin:$PATH
 export ZSH=$HOME/.oh-my-zsh
 
 ZSH_THEME="powerlevel10k/powerlevel10k"

@@ -38,8 +38,8 @@ end
 
 local keymaps = {
 	normal_mode = {
-		["<M-e>"] = {
-			cmd = ":!echo 'Hello'<CR>",
+		["<A-f>"] = {
+			cmd = ":HopWord<CR>",
 		},
 		["<leader>to"] = {
 			cmd = ":tabnew<CR>",

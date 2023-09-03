@@ -106,6 +106,13 @@ return {
 			})
 		end
 
+		-- configure python server
+		lspconfig.pyright.setup({
+			on_attach = on_attach,
+			capabilities = capabilities,
+			filetypes = { "python" },
+		})
+
 		-- configure html server
 		lspconfig["html"].setup({
 			capabilities = capabilities,
