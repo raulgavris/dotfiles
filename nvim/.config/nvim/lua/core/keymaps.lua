@@ -38,6 +38,9 @@ end
 
 local keymaps = {
 	normal_mode = {
+		["<M-e>"] = {
+			cmd = ":!echo 'Hello'<CR>",
+		},
 		["<leader>to"] = {
 			cmd = ":tabnew<CR>",
 			desc = "Open new tab",

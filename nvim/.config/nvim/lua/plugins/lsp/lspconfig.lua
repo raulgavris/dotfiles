@@ -3,6 +3,7 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"jose-elias-alvarez/typescript.nvim",
+		"RRethy/vim-illuminate",
 		"hrsh7th/cmp-nvim-lsp",
 		{
 			"smjonas/inc-rename.nvim",
@@ -81,6 +82,8 @@ return {
 				opts.desc = "Remove unused imports"
 				keymap.set("n", "<leader>ru", ":TypescriptRemoveUnused<CR>", opts) -- remove unused variables (not in youtube nvim video)
 			end
+
+			require("illuminate").on_attach(client)
 		end
 
 		-- used to enable autocompletion (assign to every lsp server config)
