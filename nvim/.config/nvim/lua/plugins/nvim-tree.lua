@@ -17,8 +17,6 @@ return {
 			end
 
 			api.config.mappings.default_on_attach(bufnr)
-
-			vim.keymap.set("n", "l", api.node.open.edit, opts("Open"))
 		end
 
 		local nvim_tree = require("nvim-tree")

@@ -5,16 +5,30 @@ return {
 		vim.o.timeout = true
 		vim.o.timeoutlen = 300
 		local wk = require("which-key")
-		wk.register({
-			["<leader>c"] = { name = "Comment selection" },
-			-- ["<leader>ff"] = { "<cmd>Telescope find_files<cr>", "Find File" },
-			-- ["<leader>fr"] = { "<cmd>Telescope oldfiles<cr>", "Open Recent File" },
-			-- ["<leader>fn"] = { "<cmd>enew<cr>", "New File" },
-		})
+		local keymaps = require("core.keymaps")
+		for mode, keys in pairs(keymaps) do
+			local convertedMappings = {}
+			local whichKeyMode = {
+				normal_mode = "n",
+				insert_mode = "i",
+				visual_mode = "v",
+				command_mode = "c",
+				terminal_mode = "t",
+				-- visual_block_mode = "b", -- Add or adjust according to your needs
+			}
+
+			for key, values in pairs(keys) do
+				convertedMappings[key] = { values.cmd, values.desc }
+			end
+
+			if whichKeyMode[mode] then
+				wk.register(convertedMappings, {
+					mode = whichKeyMode[mode],
+				})
+			else
+				print("Warning: Unknown mode " .. mode)
+			end
+		end
 	end,
-	opts = {
-		-- your configuration comes here
-		-- or leave it empty to use the default settings
-		-- refer to the configuration section below
-	},
+	opts = {},
 }

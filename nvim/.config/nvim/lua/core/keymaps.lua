@@ -36,10 +36,118 @@ local function backward_search()
 	return "<S-Tab>"
 end
 
+-- local opts = {
+-- 	noremap = true,
+-- 	silent = true,
+-- 	buffer = bufnr,
+-- }
+-- normal maps options
+
 local keymaps = {
 	normal_mode = {
+		["<leader>ru"] = {
+			cmd = ":TypescriptRemoveUnused<CR>",
+			desc = "Remove unused imports",
+		},
+		["<leader>oi"] = {
+			cmd = ":TypescriptOrganizeImports<CR>",
+			desc = "Organize imports",
+		},
+		["<leader>rf"] = {
+			cmd = ":TypescriptRenameFile<CR>",
+			desc = "Rename file and update file imports",
+		},
+		["<leader>rs"] = {
+			cmd = ":LspRestart<CR>",
+			desc = "Restart LSP",
+		},
+		["K"] = {
+			cmd = ":lua vim.lsp.buf.hover()<CR>",
+			desc = "Show documentation for what is under cursor",
+		},
+		["]d"] = {
+			cmd = ":lua vim.diagnostic.goto_next()<CR>",
+			desc = "Go to next diagnostic",
+		},
+		["[d"] = {
+			cmd = ":lua vim.diagnostic.goto_prev()<CR>",
+			desc = "Go to previous diagnostic",
+		},
+		["<leader>d"] = {
+			cmd = ":lua vim.diagnostic.open_float()<CR>",
+			desc = "Show line diagnostics",
+		},
+		["<leader>D"] = {
+			cmd = ":Telescope diagnostics bufnr=0<CR>",
+			desc = "Show buffer diagnostics",
+		},
+		["<leader>rn"] = {
+			cmd = ":IncRename<CR>",
+			desc = "Smart rename",
+		},
+		["<leader>ca"] = {
+			cmd = ":lua vim.lsp.buf.code_action()<CR>",
+			desc = "See available code actions",
+		},
+		["gt"] = {
+			cmd = ":Telescope lsp_type_definitions<CR>",
+			desc = "Show LSP type definitions",
+		},
+		["gi"] = {
+			cmd = ":Telescope lsp_implementations<CR>",
+			desc = "Show LSP implementations",
+		},
+		["gd"] = {
+			cmd = ":Telescope lsp_definitions<CR>",
+			desc = "Show LSP definitions",
+		},
+		["gD"] = {
+			cmd = ":lua vim.lsp.buf.declaration()<CR>",
+			desc = "Go to declaration",
+		},
+		["gR"] = {
+			cmd = ":Telescope lsp_references<CR>",
+			desc = "Show LSP references",
+		},
+		["<leader>hp"] = {
+			cmd = ":lua require('harpoon.ui').nav_prev()<CR>",
+			desc = "Go to previous harpoon mark",
+		},
+		["<leader>hn"] = {
+			cmd = ":lua require('harpoon.ui').nav_next()<CR>",
+			desc = "Go to next harpoon mark",
+		},
+		["<leader>hm"] = {
+			cmd = ":lua require('harpoon.mark').add_file()<CR>",
+			desc = "Mark file with harpoon",
+		},
+		["<leader>gfc"] = {
+			cmd = ":Telescope git_bcommits<CR>",
+			desc = "Show git commits for current buffer",
+		},
+		["<leader>gc"] = {
+			cmd = ":Telescope git_commits<CR>",
+			desc = "Show git commits",
+		},
+		["<leader>hf"] = {
+			cmd = ":Telescope harpoon marks<CR>",
+			desc = "Show harpoon marks",
+		},
+		["<leader>fb"] = {
+			cmd = ":Telescope buffers<CR>",
+			desc = "Show open buffers",
+		},
+		["<leader>fc"] = {
+			cmd = ":Telescope grep_string<CR>",
+			desc = "Find string under cursor in cwd",
+		},
+		["<leader>fr"] = {
+			cmd = ":Telescope oldfiles<CR>",
+			desc = "Fuzzy find recent files",
+		},
 		["<A-f>"] = {
 			cmd = ":HopWord<CR>",
+			desc = "Fast file navigation",
 		},
 		["<leader>to"] = {
 			cmd = ":tabnew<CR>",
@@ -271,3 +379,5 @@ set_keymaps(keymaps.terminal_mode, modes.terminal_mode)
 set_keymaps(keymaps.visual_mode, modes.visual_mode)
 set_keymaps(keymaps.visual_block_mode, modes.visual_block_mode)
 set_keymaps(keymaps.command_mode, modes.command_mode)
+
+return keymaps
