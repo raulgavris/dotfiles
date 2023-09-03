@@ -40,12 +40,12 @@ return {
 				["ui-select"] = { themes.get_dropdown({}) },
 				project = {
 					base_dirs = {
-						"~/Projects/personal/dotfiles/nvim",
-						"~/Projects/pws-devs/karma-frontend",
-						"~/Projects/pws-devs/karma-backend",
-						"~/Projects/pws-devs/tokenexchange-frontend",
-						"~/Projects/pws-devs/tokenexchange-admin",
-						"~/Projects/pws-devs/houdiniswap-backend",
+						"/Users/raulgavris/Projects/pws-devs/karma-frontend",
+						"/Users/raulgavris/Projects/pws-devs/karma-backend",
+						"/Users/raulgavris/Projects/pws-devs/tokenexchange-frontend",
+						"/Users/raulgavris/Projects/pws-devs/tokenexchange-admin",
+						"/Users/raulgavris/Projects/pws-devs/houdiniswap-backend",
+						"/Users/raulgavris/Projects/personal/dotfiles/nvim/.config/nvim",
 					},
 					hidden_files = true, -- default: false
 					theme = "dropdown",
