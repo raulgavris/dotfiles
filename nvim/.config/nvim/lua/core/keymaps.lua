@@ -55,6 +55,7 @@ local keymaps = {
 		["gi"] = { cmd = ":Telescope lsp_implementations<CR>", desc = "Show LSP implementations" },
 		["gd"] = { cmd = ":Telescope lsp_definitions<CR>", desc = "Show LSP definitions" },
 		["gR"] = { cmd = ":Telescope lsp_references<CR>", desc = "Show LSP references" },
+		["<leader>u"] = { cmd = ":Telescope undo<CR>", desc = "Show undos" },
 		["<leader>D"] = { cmd = ":Telescope diagnostics bufnr=0<CR>", desc = "Show buffer diagnostics" },
 		["<leader>gfc"] = { cmd = ":Telescope git_bcommits<CR>", desc = "Show git commits for current buffer" },
 		["<leader>gc"] = { cmd = ":Telescope git_commits<CR>", desc = "Show git commits" },
