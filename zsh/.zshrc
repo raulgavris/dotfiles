@@ -4,9 +4,6 @@ fi
 
 fortune | cowsay -f $(ls /opt/homebrew/Cellar/cowsay/3.04_1/share/cows | gshuf -n1) | lolcat
 
-
-
-
 export PATH=$HOME/.local/bin:$HOME/bin:/usr/bin:$PATH
 export ZSH=$HOME/.oh-my-zsh
 
@@ -18,6 +15,8 @@ source $ZSH/oh-my-zsh.sh
 bindkey '^ ' autosuggest-accept
 
 ## ALIAS
+
+alias cd='z'
 
 ## GIT
 GIT_AUTHOR_NAME="Raul Gavris"
@@ -53,6 +52,6 @@ load-nvmrc() {
 }
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
-
+eval "$(zoxide init zsh)"
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

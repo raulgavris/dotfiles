@@ -5,6 +5,7 @@ return {
 		"nvim-telescope/telescope-file-browser.nvim",
 		"nvim-telescope/telescope-project.nvim",
 		"debugloop/telescope-undo.nvim",
+		"jvgrootveld/telescope-zoxide",
 		"nvim-lua/plenary.nvim",
 		{
 			"nvim-telescope/telescope-fzf-native.nvim",
@@ -63,5 +64,7 @@ return {
 		telescope.load_extension("project")
 		telescope.load_extension("file_browser")
 		telescope.load_extension("undo")
+		telescope.load_extension("noice")
+		telescope.load_extension("zoxide")
 	end,
 }
