@@ -1,7 +1,7 @@
 return {
 	"nvim-tree/nvim-tree.lua",
 	module = true,
-	cmd = { "NvimTreeOpen", "NvimTreeToggle", "NvimTreeFocus", "NvimTreeFindFile", "NvimTreeFindFileToggle" },
+	cmd = { "NvimTreeOpen", "NvimTreeToggle" },
 	config = function()
 		local function on_attach(bufnr)
 			local api = require("nvim-tree.api")
@@ -99,6 +99,9 @@ return {
 					enable = true,
 					global = false,
 					restrict_above_cwd = true,
+				},
+				open_file = {
+					quit_on_open = false,
 				},
 			},
 			view = {

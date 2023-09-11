@@ -17,6 +17,7 @@ bindkey '^ ' autosuggest-accept
 ## ALIAS
 
 alias cd='z'
+alias vim='nvim'
 
 ## GIT
 GIT_AUTHOR_NAME="Raul Gavris"

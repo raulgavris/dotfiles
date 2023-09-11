@@ -38,6 +38,8 @@ end
 
 local keymaps = {
 	normal_mode = {
+		["<C-b>"] = { cmd = ":BufferLinePick<CR>", desc = "BufferLine pick" },
+		["<C-p>"] = { cmd = ":Legendary<CR>", desc = "Legendary Menu" },
 		["K"] = { cmd = ":lua vim.lsp.buf.hover()<CR>", desc = "Show documentation for what is under cursor" },
 		["]d"] = { cmd = ":lua vim.diagnostic.goto_next()<CR>", desc = "Go to next diagnostic" },
 		["[d"] = { cmd = ":lua vim.diagnostic.goto_prev()<CR>", desc = "Go to previous diagnostic" },
