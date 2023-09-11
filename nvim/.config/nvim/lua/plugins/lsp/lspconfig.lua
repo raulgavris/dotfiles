@@ -78,12 +78,6 @@ return {
 			on_attach = on_attach,
 		})
 
-		-- configure svelte server
-		lspconfig["svelte"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
-
 		-- configure prisma orm server
 		lspconfig["prismals"].setup({
 			capabilities = capabilities,
@@ -94,14 +88,14 @@ return {
 		lspconfig["graphql"].setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
-			filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
+			filetypes = { "graphql", "gql", "typescriptreact", "javascriptreact" },
 		})
 
 		-- configure emmet language server
 		lspconfig["emmet_ls"].setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
-			filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
+			filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
 		})
 
 		-- configure lua server (with special settings)
