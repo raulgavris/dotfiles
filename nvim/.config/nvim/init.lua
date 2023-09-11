@@ -4,7 +4,7 @@ else
 	vim.g.loaded_netrw = 1
 	vim.g.loaded_netrwPlugin = 1
 
-	local name = "gruvbox"
+	local name = "onedark"
 
 	require("core")
 	require("pluginsloader")
