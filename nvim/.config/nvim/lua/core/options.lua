@@ -47,7 +47,7 @@ local options = {
 	foldcolumn = "1",
 	ruler = false,
 	list = true,
-	listchars = "tab:  ,trail:¤,space:⋅",
+	listchars = "tab:  ,trail:¤,space: ",
 	-- shell = vim.fn.executable "pwsh" and "pwsh" or "powershell",
 	-- shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;",
 	-- shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait",

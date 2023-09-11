@@ -346,3 +346,14 @@ function _G.run_code()
 		})
 	end
 end
+
+function _G.disable_arrows()
+	local modes = { "n", "i", "v" }
+	local arrows = { "<Up>", "<Down>", "<Left>", "<Right>" }
+
+	for _, mode in ipairs(modes) do
+		for _, arrow in ipairs(arrows) do
+			vim.api.nvim_set_keymap(mode, arrow, "<Nop>", { noremap = true, silent = true })
+		end
+	end
+end

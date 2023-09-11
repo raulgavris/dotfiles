@@ -35,7 +35,6 @@ local function backward_search()
 	end
 	return "<S-Tab>"
 end
-
 local keymaps = {
 	normal_mode = {
 		--#region gitsigns
@@ -53,6 +52,12 @@ local keymaps = {
 		-- map('n', '<leader>hD', function() gs.diffthis('~') end)
 		-- map('n', '<leader>td', gs.toggle_deleted)
 		--#endregion
+		-- https://nvimdev.github.io/lspsaga/definition
+		-- https://nvimdev.github.io/lspsaga/diagnostic/
+		-- https://nvimdev.github.io/lspsaga/finder/
+		-- https://nvimdev.github.io/lspsaga/hover/
+		-- https://nvimdev.github.io/lspsaga/lightbulb/
+		-- https://nvimdev.github.io/lspsaga/outline/
 		["<C-b>"] = { cmd = ":BufferLinePick<CR>", desc = "BufferLine pick" },
 		["<C-p>"] = { cmd = ":Legendary<CR>", desc = "Legendary Menu" },
 		["K"] = { cmd = ":lua vim.lsp.buf.hover()<CR>", desc = "Show documentation for what is under cursor" },
@@ -106,30 +111,51 @@ local keymaps = {
 		--#region Indent&MoveLines
 		["<S-Tab>"] = { cmd = "<<", desc = "Indent backward" },
 		["<Tab>"] = { cmd = ">>", desc = "Indent forward" },
-		["<A-Down>"] = { cmd = ":m .+1<CR>==", desc = "Move the line up" },
-		["<A-Up>"] = { cmd = ":m .-2<CR>==", desc = "Move the line down" },
+		["<C-w>k"] = { cmd = ":m .-2<CR>==", desc = "Move the line up" },
+		["<C-w>j"] = { cmd = ":m .+1<CR>==", desc = "Move the line down" },
 		--#endregion
 		["<C-q>"] = { cmd = close, desc = "Close window" },
 		["<A-f>"] = { cmd = ":HopWord<CR>", desc = "Fast file navigation" },
-		["<leader>nh"] = { cmd = ":nohl<CR>", desc = "Clear search highlights" },
+		["<A-t>"] = { cmd = ":lua require('FTerm').toggle()<CR>", desc = "Toggle terminal" },
+		["<Esc>"] = { cmd = ":nohl<CR>", desc = "Clear search highlights" },
 		["<F5>"] = { cmd = run_code, desc = "Run Code" },
+		["<C-h>"] = { cmd = "<C-w>h", desc = "Window left" },
+		["<C-l>"] = { cmd = "<C-w>l", desc = "Window right" },
+		["<C-j>"] = { cmd = "<C-w>j", desc = "Window down" },
+		["<C-k>"] = { cmd = "<C-w>k", desc = "Window up" },
+		["<C-s>"] = { cmd = "<cmd> w <CR>", desc = "Save file" },
+		["<C-c>"] = { cmd = "<cmd> %y+ <CR>", desc = "Copy whole file" },
+		-- ["<C-Up>"] = ":resize -2<CR>",
+		-- ["<C-Down>"] = ":resize +2<CR>",
+		-- ["<C-Left>"] = ":vertical resize -2<CR>",
+		-- ["<C-Right>"] = ":vertical resize +2<CR>",
 	},
-	insert_mode = {},
+	insert_mode = {
+		["<C-b>"] = { cmd = "<ESC>^i", desc = "Beginning of line" },
+		["<C-e>"] = { cmd = "<End>", desc = "End of line" },
+
+		["<A-j>"] = { cmd = "<Esc>:m .+1<CR>==gi", desc = "Move the selected text down" },
+		["<A-k>"] = { cmd = "<Esc>:m .-2<CR>==gi", desc = "Move the selected text up" },
+
+		["<C-h>"] = { cmd = "<Left>", desc = "Move left" },
+		["<C-l>"] = { cmd = "<Right>", desc = "Move right" },
+		["<C-j>"] = { cmd = "<Down>", desc = "Move down" },
+		["<C-k>"] = { cmd = "<Up>", desc = "Move up" },
+	},
 	terminal_mode = {
 		["<Esc>"] = { cmd = "<C-\\><C-n>", desc = "Enter insert mode" },
 	},
 	visual_mode = {
-		["p"] = { cmd = '"_dP', desc = "Better Paste" },
 		--#region Indent&MoveLines
 		["<S-Tab>"] = { cmd = "<gv", desc = "Indent backward" },
 		["<Tab>"] = { cmd = ">gv", desc = "Indent forward" },
-		["<A-Down>"] = { cmd = ":m '>+1<CR>gv=gv", desc = "Move the selected text up" },
-		["<A-Up>"] = { cmd = ":m '<-2<CR>gv=gv", desc = "Move the selected text down" },
+		["<C-w>j"] = { cmd = ":m '>+1<CR>gv=gv", desc = "Move the selected text down" },
+		["<C-w>k"] = { cmd = ":m '<-2<CR>gv=gv", desc = "Move the selected text up" },
 		--#endregion
 	},
 	visual_block_mode = {
-		["<A-Up>"] = { cmd = ":m '>+1<CR>gv=gv", desc = "Move the selected text up" },
-		["<A-Down>"] = { cmd = ":m '<-2<CR>gv=gv", desc = "Move the selected text down" },
+		["<C-w>j"] = { cmd = ":m '>+1<CR>gv=gv", desc = "Move the selected text down" },
+		["<C-w>k"] = { cmd = ":m '<-2<CR>gv=gv", desc = "Move the selected text up" },
 	},
 	command_mode = {
 		["<Tab>"] = { cmd = forward_search, desc = "Word Search Increment" },
@@ -145,5 +171,6 @@ set_keymaps(keymaps.terminal_mode, modes.terminal_mode)
 set_keymaps(keymaps.visual_mode, modes.visual_mode)
 set_keymaps(keymaps.visual_block_mode, modes.visual_block_mode)
 set_keymaps(keymaps.command_mode, modes.command_mode)
+disable_arrows()
 
 return keymaps
