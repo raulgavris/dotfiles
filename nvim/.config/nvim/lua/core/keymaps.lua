@@ -171,6 +171,10 @@ set_keymaps(keymaps.terminal_mode, modes.terminal_mode)
 set_keymaps(keymaps.visual_mode, modes.visual_mode)
 set_keymaps(keymaps.visual_block_mode, modes.visual_block_mode)
 set_keymaps(keymaps.command_mode, modes.command_mode)
-disable_arrows()
+-- disable_arrows()
+vim.g.copilot_no_tab_map = true
+vim.g.copilot_assume_mapped = true
+vim.g.copilot_tab_fallback = ""
+vim.api.nvim_set_keymap("i", ",<Tab>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
 return keymaps
