@@ -52,6 +52,16 @@ return {
 			filetypes = { "python" },
 		})
 
+		-- configure python server
+		lspconfig.clangd.setup({
+			on_attach = on_attach,
+			capabilities = capabilities,
+			cmd = {
+				"clangd",
+				"--offset-encoding=utf-16",
+			},
+		})
+
 		-- configure html server
 		lspconfig["html"].setup({
 			capabilities = capabilities,

@@ -22,6 +22,7 @@ return {
 				"cssls",
 				"tailwindcss",
 				"pyright",
+				"clangd",
 				"lua_ls",
 				"graphql",
 				"emmet_ls",
@@ -37,6 +38,7 @@ return {
 				"prettier", -- ts/js formatter
 				"stylua", -- lua formatter
 				"eslint_d", -- ts/js linter
+				"clang-format",
 			},
 			-- auto-install configured servers (with lspconfig)
 			automatic_installation = true,
