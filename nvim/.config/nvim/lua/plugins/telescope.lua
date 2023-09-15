@@ -24,11 +24,29 @@ return {
 
 		-- import telescope-ui-select safely
 		local themes = require("telescope.themes")
+		local previewers = require("telescope.previewers")
 
+		local new_maker = function(filepath, bufnr, opts)
+			opts = opts or {}
+
+			filepath = vim.fn.expand(filepath)
+			vim.loop.fs_stat(filepath, function(_, stat)
+				if not stat then
+					return
+				end
+				if stat.size > 100000 then
+					return
+				else
+					previewers.buffer_previewer_maker(filepath, bufnr, opts)
+				end
+			end)
+		end
 		-- configure telescope
 		telescope.setup({
+			file_ignore_patterns = { "node_modules", ".git" },
 			-- configure custom mappings
 			defaults = {
+				buffer_previewer_maker = new_maker,
 				path_display = { "truncate" },
 				mappings = {
 					i = {
