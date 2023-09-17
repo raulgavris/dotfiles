@@ -109,8 +109,8 @@ local keymaps = {
 		["<leader>sh"] = { cmd = "<C-w>s", desc = "Split horizontally" },
 		--#endregion
 		--#region Indent&MoveLines
-		["<S-Tab>"] = { cmd = "<<", desc = "Indent backward" },
-		["<Tab>"] = { cmd = ">>", desc = "Indent forward" },
+		["<S-<>"] = { cmd = "<<", desc = "Indent backward" },
+		["<S->>"] = { cmd = ">>", desc = "Indent forward" },
 		["<C-w>k"] = { cmd = ":m .-2<CR>==", desc = "Move the line up" },
 		["<C-w>j"] = { cmd = ":m .+1<CR>==", desc = "Move the line down" },
 		--#endregion
@@ -178,3 +178,11 @@ vim.g.copilot_tab_fallback = ""
 vim.api.nvim_set_keymap("i", ",<Tab>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
 return keymaps
+
+
+
+
+local var1
+local var2
+local var3
+local var4
