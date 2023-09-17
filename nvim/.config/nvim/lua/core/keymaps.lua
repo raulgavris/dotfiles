@@ -178,11 +178,3 @@ vim.g.copilot_tab_fallback = ""
 vim.api.nvim_set_keymap("i", ",<Tab>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
 return keymaps
-
-
-
-
-local var1
-local var2
-local var3
-local var4
