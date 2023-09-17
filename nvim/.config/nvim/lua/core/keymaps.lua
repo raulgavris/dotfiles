@@ -109,8 +109,8 @@ local keymaps = {
 		["<leader>sh"] = { cmd = "<C-w>s", desc = "Split horizontally" },
 		--#endregion
 		--#region Indent&MoveLines
-		["<S-<>"] = { cmd = "<<", desc = "Indent backward" },
-		["<S->>"] = { cmd = ">>", desc = "Indent forward" },
+		["<"] = { cmd = "<<", desc = "Indent backward" },
+		[">"] = { cmd = ">>", desc = "Indent forward" },
 		["<C-w>k"] = { cmd = ":m .-2<CR>==", desc = "Move the line up" },
 		["<C-w>j"] = { cmd = ":m .+1<CR>==", desc = "Move the line down" },
 		--#endregion
