@@ -2,7 +2,7 @@
 #   exec tmux
 # fi
 
-fortune | cowsay -f $(ls /opt/homebrew/Cellar/cowsay/3.04_1/share/cows | gshuf -n1) | lolcat
+fortune | cowsay | lolcat
 
 export PATH=$HOME/.local/bin:$HOME/bin:/usr/bin:$PATH
 export ZSH=$HOME/.oh-my-zsh
@@ -54,5 +54,25 @@ load-nvmrc() {
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 eval "$(zoxide init zsh)"
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3  # Or the path to your Python installation
+source /Users/raulgavris/Library/Python/3.9/bin/virtualenvwrapper.sh
+
+export JAVA_HOME=$(/usr/libexec/java_home)
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+
+PATH="$HOME/.console-ninja/.bin:$HOME/.pub-cache/bin:/Users/raulgavris/fvm/default/bin:$PATH"
+export PATH
+## [Completion]
+## Completion scripts setup. Remove the following line to uninstall
+[[ -f /Users/raulgavris/.dart-cli-completion/zsh-config.zsh ]] && . /Users/raulgavris/.dart-cli-completion/zsh-config.zsh || true
+## [/Completion]
+
