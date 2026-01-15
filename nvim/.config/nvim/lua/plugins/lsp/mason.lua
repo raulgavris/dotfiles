@@ -1,19 +1,15 @@
 return {
-	"williamboman/mason.nvim",
-	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
-		"jay-babu/mason-null-ls.nvim", -- Updated to maintained version
+	{
+		"williamboman/mason.nvim",
+		cmd = "Mason",
+		build = ":MasonUpdate",
+		opts = {},
 	},
-	config = function()
-		local mason = require("mason")
-		local mason_lspconfig = require("mason-lspconfig")
-		local mason_null_ls = require("mason-null-ls")
-
-		-- enable mason
-		mason.setup()
-
-		mason_lspconfig.setup({
-			-- list of servers for mason to install
+	{
+		"williamboman/mason-lspconfig.nvim",
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = { "williamboman/mason.nvim" },
+		opts = {
 			ensure_installed = {
 				-- JavaScript/TypeScript/React/Node
 				"ts_ls",
@@ -38,10 +34,16 @@ return {
 				"yamlls",
 			},
 			automatic_installation = true,
-		})
-
-		mason_null_ls.setup({
-			-- list of formatters & linters for mason to install
+		},
+	},
+	{
+		"jay-babu/mason-null-ls.nvim",
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = {
+			"williamboman/mason.nvim",
+			"nvimtools/none-ls.nvim",
+		},
+		opts = {
 			ensure_installed = {
 				-- JavaScript/TypeScript
 				"prettier",
@@ -56,6 +58,6 @@ return {
 				"clang-format",
 			},
 			automatic_installation = true,
-		})
-	end,
+		},
+	},
 }
