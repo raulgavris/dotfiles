@@ -1,5 +1,4 @@
 # Tmux plugins (managed by TPM)
-tmux/.tmux/plugins/
 
 # macOS
 .DS_Store
