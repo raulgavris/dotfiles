@@ -36,6 +36,9 @@ local function backward_search()
 	return "<S-Tab>"
 end
 
+-- Store last executed command for quick repeat
+_G.last_palette_cmd = nil
+
 -- Visual mode command palette with selection-aware actions
 function _G.visual_command_palette()
 	local actions = {
@@ -49,6 +52,17 @@ function _G.visual_command_palette()
 		{ name = "Lowercase", cmd = "'<,'>s/.*/\\L&/" },
 	}
 
+	-- Move last command to top if exists
+	if _G.last_palette_cmd then
+		for i, action in ipairs(actions) do
+			if action.cmd == _G.last_palette_cmd then
+				table.remove(actions, i)
+				table.insert(actions, 1, { name = "↺ " .. action.name, cmd = action.cmd })
+				break
+			end
+		end
+	end
+
 	vim.ui.select(actions, {
 		prompt = "Command Palette (Visual)",
 		format_item = function(item)
@@ -56,6 +70,7 @@ function _G.visual_command_palette()
 		end,
 	}, function(choice)
 		if choice then
+			_G.last_palette_cmd = choice.cmd
 			vim.cmd(choice.cmd)
 		end
 	end)
@@ -74,6 +89,26 @@ local function command_palette()
 		{ name = "Quick Fix", cmd = "lua vim.lsp.buf.code_action({ context = { only = { 'quickfix' } } })" },
 		{ name = "Rename Symbol", cmd = "lua vim.lsp.buf.rename()" },
 		{ name = "Organize Imports", cmd = "lua vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })" },
+
+		-- TypeScript (typescript-tools)
+		{ name = "TS: Organize Imports", cmd = "TSToolsOrganizeImports" },
+		{ name = "TS: Sort Imports", cmd = "TSToolsSortImports" },
+		{ name = "TS: Remove Unused Imports", cmd = "TSToolsRemoveUnusedImports" },
+		{ name = "TS: Add Missing Imports", cmd = "TSToolsAddMissingImports" },
+		{ name = "TS: Fix All Errors", cmd = "TSToolsFixAll" },
+		{ name = "TS: Rename File", cmd = "TSToolsRenameFile" },
+		{ name = "TS: Go to Source Definition", cmd = "TSToolsGoToSourceDefinition" },
+		{ name = "TS: File References", cmd = "TSToolsFileReferences" },
+
+		-- AI (Claude Code)
+		{ name = "Claude: Toggle", cmd = "ClaudeCode" },
+		{ name = "Claude: Focus", cmd = "ClaudeCodeFocus" },
+		{ name = "Claude: Resume", cmd = "ClaudeCode --resume" },
+		{ name = "Claude: Continue", cmd = "ClaudeCode --continue" },
+		{ name = "Claude: Add Buffer", cmd = "ClaudeCodeAdd %" },
+		{ name = "Claude: Select Model", cmd = "ClaudeCodeSelectModel" },
+		{ name = "Claude: Accept Diff", cmd = "ClaudeCodeDiffAccept" },
+		{ name = "Claude: Deny Diff", cmd = "ClaudeCodeDiffDeny" },
 
 		-- Navigation
 		{ name = "Go to Symbol in File", cmd = "Telescope lsp_document_symbols" },
@@ -112,6 +147,16 @@ local function command_palette()
 		{ name = "Debug: Hover Variable", cmd = "lua require('dap.ui.widgets').hover()" },
 		{ name = "Debug: Run Last", cmd = "lua require('dap').run_last()" },
 
+		-- Testing
+		{ name = "Test: Run Nearest", cmd = "lua require('neotest').run.run()" },
+		{ name = "Test: Run File", cmd = "lua require('neotest').run.run(vim.fn.expand('%'))" },
+		{ name = "Test: Run All", cmd = "lua require('neotest').run.run({ suite = true })" },
+		{ name = "Test: Run Last", cmd = "lua require('neotest').run.run_last()" },
+		{ name = "Test: Toggle Summary", cmd = "lua require('neotest').summary.toggle()" },
+		{ name = "Test: Show Output", cmd = "lua require('neotest').output.open({ enter = true })" },
+		{ name = "Test: Debug Nearest", cmd = "lua require('neotest').run.run({ strategy = 'dap' })" },
+		{ name = "Test: Stop", cmd = "lua require('neotest').run.stop()" },
+
 		-- Diagnostics
 		{ name = "Show All Diagnostics", cmd = "Trouble diagnostics" },
 		{ name = "Show Buffer Diagnostics", cmd = "Trouble diagnostics filter.buf=0" },
@@ -123,6 +168,17 @@ local function command_palette()
 		{ name = "Restore Session", cmd = "lua require('persistence').load()" },
 	}
 
+	-- Move last command to top if exists
+	if _G.last_palette_cmd then
+		for i, action in ipairs(actions) do
+			if action.cmd == _G.last_palette_cmd then
+				table.remove(actions, i)
+				table.insert(actions, 1, { name = "↺ " .. action.name, cmd = action.cmd })
+				break
+			end
+		end
+	end
+
 	vim.ui.select(actions, {
 		prompt = "Command Palette",
 		format_item = function(item)
@@ -130,6 +186,7 @@ local function command_palette()
 		end,
 	}, function(choice)
 		if choice then
+			_G.last_palette_cmd = choice.cmd
 			vim.cmd(choice.cmd)
 		end
 	end)
@@ -196,10 +253,14 @@ local keymaps = {
 		["<leader>:"] = { cmd = ":Telescope commands<CR>", desc = "All commands" },
 		--#endregion
 
-		--#region Typescript
-		["<leader>ru"] = { cmd = ":TypescriptRemoveUnused<CR>", desc = "Remove unused imports" },
-		["<leader>oi"] = { cmd = ":TypescriptOrganizeImports<CR>", desc = "Organize imports" },
-		["<leader>rf"] = { cmd = ":TypescriptRenameFile<CR>", desc = "Rename file and update file imports" },
+		--#region TypeScript (typescript-tools.nvim)
+		["<leader>oi"] = { cmd = ":TSToolsOrganizeImports<CR>", desc = "Organize imports" },
+		["<leader>os"] = { cmd = ":TSToolsSortImports<CR>", desc = "Sort imports" },
+		["<leader>ru"] = { cmd = ":TSToolsRemoveUnusedImports<CR>", desc = "Remove unused imports" },
+		["<leader>ri"] = { cmd = ":TSToolsAddMissingImports<CR>", desc = "Add missing imports" },
+		["<leader>rf"] = { cmd = ":TSToolsRenameFile<CR>", desc = "Rename file and update imports" },
+		["<leader>ra"] = { cmd = ":TSToolsFixAll<CR>", desc = "Fix all auto-fixable errors" },
+		["<leader>rd"] = { cmd = ":TSToolsGoToSourceDefinition<CR>", desc = "Go to source definition" },
 		--#endregion
 
 		--#region Tabs

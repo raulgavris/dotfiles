@@ -10,24 +10,6 @@ return {
 		"hrsh7th/cmp-cmdline", -- CommandLine Completions
 		"L3MON4D3/LuaSnip", -- Snippet Engine
 		"rafamadriz/friendly-snippets", -- Bunch of Snippets
-		{
-			"windwp/nvim-autopairs",
-			config = function()
-				local autopairs = require("nvim-autopairs")
-
-				autopairs.setup({
-					check_ts = true, -- treesitter integration
-					disable_filetype = { "TelescopePrompt" },
-				})
-
-				local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-				local cmp_status_ok, cmp = pcall(require, "cmp")
-				if not cmp_status_ok then
-					return
-				end
-				cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done({}))
-			end,
-		},
 	},
 	config = function()
 		local cmp = require("cmp")
@@ -126,25 +108,12 @@ return {
 				end,
 			},
 		sources = {
-			{
-				name = "codeium",
-				priority = 1000,
-			},
-			{
-				name = "nvim_lsp",
-			},
-			{
-				name = "nvim_lua",
-			},
-			{
-				name = "luasnip",
-			},
-			{
-				name = "buffer",
-			},
-			{
-				name = "path",
-			},
+			{ name = "nvim_lsp", priority = 1000 },
+			{ name = "codeium", priority = 750 },
+			{ name = "luasnip", priority = 500 },
+			{ name = "nvim_lua", priority = 400 },
+			{ name = "buffer", priority = 300, keyword_length = 3 },
+			{ name = "path", priority = 200 },
 		},
 			confirm_opts = {
 				behavior = cmp.ConfirmBehavior.Replace,

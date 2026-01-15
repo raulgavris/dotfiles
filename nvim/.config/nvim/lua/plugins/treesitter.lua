@@ -37,28 +37,46 @@ return {
 	config = function()
 		require("nvim-treesitter.config").setup({
 			ensure_installed = {
+				-- Shell
 				"bash",
+				-- C/C++
 				"c",
 				"cpp",
+				"cmake",
+				-- Web (React/Next/HTML/CSS)
 				"css",
-				"dockerfile",
-				"gitignore",
-				"graphql",
+				"scss",
 				"html",
 				"javascript",
+				"typescript",
+				"tsx",
+				"graphql",
+				"prisma",
+				-- Python
+				"python",
+				-- Docker
+				"dockerfile",
+				-- Config files
 				"json",
-				"lua",
+				"jsonc",
+				"yaml",
+				"toml",
+				"xml",
+				"gitignore",
+				"gitcommit",
+				"git_rebase",
+				-- Documentation
 				"markdown",
 				"markdown_inline",
-				"prisma",
-				"python",
 				"regex",
-				"scss",
-				"tsx",
-				"typescript",
+				-- Lua/Vim
+				"lua",
 				"vim",
 				"vimdoc",
-				"yaml",
+				-- React Native (Java/Kotlin for Android, Swift for iOS)
+				"java",
+				"kotlin",
+				"swift",
 			},
 			highlight = {
 				enable = true, -- false will disable the whole extension
