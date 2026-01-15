@@ -36,101 +36,68 @@ return {
 			{
 				"jay-babu/mason-nvim-dap.nvim",
 				dependencies = { "williamboman/mason.nvim" },
-				opts = {
-					ensure_installed = {
-						"node2",
-						"js",
-						"python",
-					},
-					automatic_installation = true,
-					handlers = {},
-				},
-			},
-		},
-		keys = {
-			-- Debug controls
-			{
-				"<leader>db",
-				function()
-					require("dap").toggle_breakpoint()
+				config = function()
+					require("mason-nvim-dap").setup({
+						ensure_installed = { "js-debug-adapter", "debugpy" },
+						automatic_installation = true,
+						handlers = {
+							function(config)
+								require("mason-nvim-dap").default_setup(config)
+							end,
+						},
+					})
 				end,
-				desc = "Toggle Breakpoint",
-			},
-			{
-				"<leader>dB",
-				function()
-					require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
-				end,
-				desc = "Conditional Breakpoint",
-			},
-			{
-				"<leader>dc",
-				function()
-					require("dap").continue()
-				end,
-				desc = "Start/Continue",
-			},
-			{
-				"<leader>di",
-				function()
-					require("dap").step_into()
-				end,
-				desc = "Step Into",
-			},
-			{
-				"<leader>do",
-				function()
-					require("dap").step_over()
-				end,
-				desc = "Step Over",
-			},
-			{
-				"<leader>dO",
-				function()
-					require("dap").step_out()
-				end,
-				desc = "Step Out",
-			},
-			{
-				"<leader>dr",
-				function()
-					require("dap").repl.toggle()
-				end,
-				desc = "Toggle REPL",
-			},
-			{
-				"<leader>dl",
-				function()
-					require("dap").run_last()
-				end,
-				desc = "Run Last",
-			},
-			{
-				"<leader>dt",
-				function()
-					require("dap").terminate()
-				end,
-				desc = "Terminate",
-			},
-			-- DAP UI
-			{
-				"<leader>du",
-				function()
-					require("dapui").toggle()
-				end,
-				desc = "Toggle DAP UI",
-			},
-			{
-				"<leader>dh",
-				function()
-					require("dap.ui.widgets").hover()
-				end,
-				desc = "Hover Variables",
 			},
 		},
 		config = function()
 			local dap = require("dap")
 			local dapui = require("dapui")
+
+			-- Manually configure pwa-node adapter (js-debug-adapter)
+			local js_debug_adapter = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js"
+
+			dap.adapters["pwa-node"] = {
+				type = "server",
+				host = "localhost",
+				port = "${port}",
+				executable = {
+					command = "node",
+					args = { js_debug_adapter, "${port}" },
+				},
+			}
+
+			-- Configurations for JavaScript/TypeScript
+			local js_config = {
+				-- Attach to specific port (default 9229)
+				{
+					type = "pwa-node",
+					request = "attach",
+					name = "Attach to Port 9229",
+					port = 9229,
+					cwd = vim.fn.getcwd(),
+					sourceMaps = true,
+				},
+				-- Attach to running process
+				{
+					type = "pwa-node",
+					request = "attach",
+					name = "Attach to Process",
+					processId = require("dap.utils").pick_process,
+					cwd = vim.fn.getcwd(),
+					sourceMaps = true,
+				},
+				-- Launch current file with node
+				{
+					type = "pwa-node",
+					request = "launch",
+					name = "Launch File",
+					program = "${file}",
+					cwd = vim.fn.getcwd(),
+				},
+			}
+
+			dap.configurations.javascript = js_config
+			dap.configurations.typescript = js_config
 
 			-- Auto-open/close DAP UI
 			dap.listeners.after.event_initialized["dapui_config"] = function()
@@ -143,10 +110,25 @@ return {
 				dapui.close()
 			end
 
-			-- Signs for breakpoints
-			vim.fn.sign_define("DapBreakpoint", { text = "🔴", texthl = "", linehl = "", numhl = "" })
-			vim.fn.sign_define("DapBreakpointCondition", { text = "🟡", texthl = "", linehl = "", numhl = "" })
-			vim.fn.sign_define("DapStopped", { text = "▶️", texthl = "", linehl = "", numhl = "" })
+			-- Configure DAP signs using the new API (Neovim 0.11+)
+			local dap_signs = {
+				DapBreakpoint = { text = "●", texthl = "DapBreakpoint" },
+				DapBreakpointCondition = { text = "●", texthl = "DapBreakpointCondition" },
+				DapBreakpointRejected = { text = "●", texthl = "DapBreakpointRejected" },
+				DapStopped = { text = "→", texthl = "DapStopped", linehl = "DapStoppedLine" },
+				DapLogPoint = { text = "◆", texthl = "DapLogPoint" },
+			}
+			for name, sign in pairs(dap_signs) do
+				vim.fn.sign_define(name, sign)
+			end
+
+			-- Set highlight colors for DAP signs
+			vim.api.nvim_set_hl(0, "DapBreakpoint", { fg = "#e51400" })
+			vim.api.nvim_set_hl(0, "DapBreakpointCondition", { fg = "#e5c400" })
+			vim.api.nvim_set_hl(0, "DapBreakpointRejected", { fg = "#424242" })
+			vim.api.nvim_set_hl(0, "DapStopped", { fg = "#98c379" })
+			vim.api.nvim_set_hl(0, "DapStoppedLine", { bg = "#2e4d3d" })
+			vim.api.nvim_set_hl(0, "DapLogPoint", { fg = "#61afef" })
 		end,
 	},
 }

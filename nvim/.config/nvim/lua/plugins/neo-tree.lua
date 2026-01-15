@@ -7,11 +7,6 @@ return {
 		"MunifTanjim/nui.nvim",
 	},
 	cmd = "Neotree",
-	keys = {
-		{ "<C-e>", "<cmd>Neotree toggle<cr>", desc = "Toggle Neo-tree" },
-		{ "<leader>e", "<cmd>Neotree focus<cr>", desc = "Focus Neo-tree" },
-		{ "<leader>ge", "<cmd>Neotree float git_status<cr>", desc = "Git status (Neo-tree)" },
-	},
 	opts = {
 		close_if_last_window = true,
 		popup_border_style = "rounded",

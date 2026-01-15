@@ -93,8 +93,4 @@ return {
 			whitespace = "  ",
 		},
 	},
-	keys = {
-		{ "<leader>o", "<cmd>AerialToggle!<CR>", desc = "Toggle Outline (Aerial)" },
-		{ "<leader>O", "<cmd>AerialOpen<CR>", desc = "Open Outline" },
-	},
 }

@@ -1,6 +1,6 @@
 return {
 	"nvim-telescope/telescope.nvim",
-	branch = "0.1.x",
+	-- Using master branch for Neovim 0.11+ compatibility
 	dependencies = {
 		"nvim-telescope/telescope-file-browser.nvim",
 		"nvim-telescope/telescope-project.nvim",
