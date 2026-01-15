@@ -84,7 +84,7 @@ return {
 		vim.lsp.config("jsonls", {
 			settings = {
 				json = {
-					schemas = require("schemastore").schemas(),
+					schemas = require("schemastore").json.schemas(),
 					validate = { enable = true },
 				},
 			},
@@ -94,7 +94,7 @@ return {
 		vim.lsp.config("yamlls", {
 			settings = {
 				yaml = {
-					schemas = require("schemastore").schemas(),
+					schemas = require("schemastore").yaml.schemas(),
 					validate = true,
 					schemaStore = {
 						enable = false,
