@@ -143,6 +143,8 @@ alias clr='clear'
 alias h='history'
 alias ports='lsof -iTCP -sTCP:LISTEN -n -P'
 
+alias houdini='cursor /Users/raulgavris/Projects/dotfiles/houdini.code-workspace'
+
 # ============================================
 # 🛠️ FUNCTIONS
 # ============================================
