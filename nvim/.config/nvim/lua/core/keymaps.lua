@@ -90,6 +90,12 @@ local function command_palette()
 		{ name = "Rename Symbol", cmd = "lua vim.lsp.buf.rename()" },
 		{ name = "Organize Imports", cmd = "lua vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })" },
 
+		-- Tailwind CSS
+		{ name = "Tailwind: Sort Classes", cmd = "TailwindSort" },
+		{ name = "Tailwind: Toggle Colors", cmd = "TailwindColorToggle" },
+		{ name = "Tailwind: Toggle Conceal", cmd = "TailwindConcealToggle" },
+		{ name = "Tailwind: Utilities", cmd = "Telescope tailwind utilities" },
+
 		-- TypeScript (typescript-tools)
 		{ name = "TS: Organize Imports", cmd = "TSToolsOrganizeImports" },
 		{ name = "TS: Sort Imports", cmd = "TSToolsSortImports" },

@@ -42,6 +42,7 @@ return {
 							"js-debug-adapter", -- JavaScript/TypeScript/React/Node
 							"debugpy", -- Python
 							"codelldb", -- C/C++/Rust
+							"chrome-debug-adapter", -- Chrome/Browser debugging
 						},
 						automatic_installation = true,
 						handlers = {
@@ -49,6 +50,17 @@ return {
 								require("mason-nvim-dap").default_setup(config)
 							end,
 						},
+					})
+				end,
+			},
+			-- VSCode JS debugger for browser debugging
+			{
+				"mxsdev/nvim-dap-vscode-js",
+				dependencies = { "mfussenegger/nvim-dap" },
+				config = function()
+					require("dap-vscode-js").setup({
+						debugger_path = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter",
+						adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
 					})
 				end,
 			},
@@ -155,8 +167,43 @@ return {
 
 			dap.configurations.javascript = js_config
 			dap.configurations.typescript = js_config
-			dap.configurations.typescriptreact = js_config
-			dap.configurations.javascriptreact = js_config
+
+			-- React/Browser debugging (Chrome)
+			local react_config = vim.deepcopy(js_config)
+
+			-- Add Chrome debugging configs for React
+			table.insert(react_config, {
+				type = "pwa-chrome",
+				request = "launch",
+				name = "Launch Chrome (localhost:3000)",
+				url = "http://localhost:3000",
+				webRoot = vim.fn.getcwd(),
+				sourceMaps = true,
+				skipFiles = { "<node_internals>/**", "node_modules/**" },
+			})
+			table.insert(react_config, {
+				type = "pwa-chrome",
+				request = "launch",
+				name = "Launch Chrome (custom URL)",
+				url = function()
+					return vim.fn.input("URL: ", "http://localhost:3000")
+				end,
+				webRoot = vim.fn.getcwd(),
+				sourceMaps = true,
+				skipFiles = { "<node_internals>/**", "node_modules/**" },
+			})
+			table.insert(react_config, {
+				type = "pwa-chrome",
+				request = "attach",
+				name = "Attach to Chrome (port 9222)",
+				port = 9222,
+				webRoot = vim.fn.getcwd(),
+				sourceMaps = true,
+				skipFiles = { "<node_internals>/**", "node_modules/**" },
+			})
+
+			dap.configurations.typescriptreact = react_config
+			dap.configurations.javascriptreact = react_config
 
 			-- C/C++ adapter (codelldb)
 			local codelldb_path = vim.fn.stdpath("data") .. "/mason/packages/codelldb/extension/adapter/codelldb"
