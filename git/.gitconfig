@@ -1,0 +1,155 @@
+[user]
+	name = Raul Gavris
+	email = rg.raulgavris@gmail.com
+
+[core]
+	editor = nvim
+	excludesfile = ~/.gitignore_global
+	autocrlf = input
+	safecrlf = warn
+	pager = less -FRX
+
+[init]
+	defaultBranch = main
+
+[pull]
+	rebase = true
+
+[push]
+	default = current
+	autoSetupRemote = true
+
+[fetch]
+	prune = true
+
+[diff]
+	colorMoved = zebra
+
+[merge]
+	conflictstyle = diff3
+
+[rebase]
+	autoStash = true
+	autoSquash = true
+
+[color]
+	ui = auto
+	branch = auto
+	diff = auto
+	status = auto
+
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+
+[color "status"]
+	added = green
+	changed = yellow
+	untracked = red
+
+# ============================================
+# Aliases
+# ============================================
+[alias]
+	# Short status
+	s = status -sb
+	st = status
+	
+	# Add
+	a = add
+	aa = add --all
+	ap = add --patch
+	
+	# Commit
+	c = commit
+	cm = commit -m
+	ca = commit --amend
+	can = commit --amend --no-edit
+	
+	# Checkout
+	co = checkout
+	cob = checkout -b
+	
+	# Branch
+	b = branch
+	ba = branch -a
+	bd = branch -d
+	bD = branch -D
+	
+	# Diff
+	d = diff
+	ds = diff --staged
+	dw = diff --word-diff
+	
+	# Log
+	l = log --oneline --graph --decorate
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	ll = log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat
+	lol = log --graph --decorate --pretty=oneline --abbrev-commit
+	lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+	last = log -1 HEAD --stat
+	
+	# Pull/Push
+	pl = pull
+	ps = push
+	pf = push --force-with-lease
+	
+	# Remote
+	r = remote -v
+	
+	# Stash
+	ss = stash
+	sl = stash list
+	sp = stash pop
+	sa = stash apply
+	sd = stash drop
+	
+	# Reset
+	unstage = reset HEAD --
+	undo = reset --soft HEAD^
+	
+	# Cleanup
+	cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop' | xargs -n 1 git branch -d"
+	
+	# Show aliases
+	aliases = config --get-regexp alias
+	
+	# Quick commit all
+	ac = !git add -A && git commit -m
+	
+	# Amend last commit with all changes
+	amend = commit -a --amend --no-edit
+	
+	# Show what I did today
+	today = log --since=midnight --author='Raul Gavris' --oneline
+	
+	# Undo last commit but keep changes
+	uncommit = reset --soft HEAD~1
+	
+	# Show contributors
+	contributors = shortlog --summary --numbered
+	
+	# Find branches containing commit
+	fb = "!f() { git branch -a --contains $1; }; f"
+	
+	# Find tags containing commit
+	ft = "!f() { git describe --always --contains $1; }; f"
+	
+	# Find commits by commit message
+	fm = "!f() { git log --pretty=format:'%C(yellow)%h %Cblue%ad %Creset%s%Cgreen [%cn] %Cred%d' --decorate --date=short --grep=$1; }; f"
+	
+	# Remove branches that have already been merged with main
+	dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

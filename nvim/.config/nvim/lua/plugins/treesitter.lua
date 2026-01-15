@@ -35,34 +35,31 @@ return {
 	},
 	build = ":TSUpdate",
 	config = function()
-		local configs = require("nvim-treesitter.configs")
-
-		configs.setup({
+		require("nvim-treesitter.config").setup({
 			ensure_installed = {
-				"json",
-				"javascript",
-				"typescript",
-				"tsx",
-				"yaml",
-				"prisma",
-				"markdown",
-				"markdown_inline",
-				"graphql",
 				"bash",
-				"lua",
-				"vim",
-				"dockerfile",
-				"gitignore",
 				"c",
 				"cpp",
-				"python",
-				"html",
 				"css",
-				"scss",
+				"dockerfile",
+				"gitignore",
+				"graphql",
+				"html",
+				"javascript",
 				"json",
+				"lua",
+				"markdown",
+				"markdown_inline",
+				"prisma",
+				"python",
 				"regex",
-				"bash",
-			}, -- one of "all" or a list of languages
+				"scss",
+				"tsx",
+				"typescript",
+				"vim",
+				"vimdoc",
+				"yaml",
+			},
 			highlight = {
 				enable = true, -- false will disable the whole extension
 				disable = "", -- list of language that will be disabled

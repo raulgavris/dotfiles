@@ -67,13 +67,13 @@ return {
 			Operator = "󰆕",
 			TypeParameter = "",
 			Package = "",
-			Copilot = "",
 			Calendar = "",
 			Tag = "",
-			Null = "󰟢",
-		}
+		Null = "󰟢",
+		Codeium = "",
+	}
 
-		cmp.setup({
+	cmp.setup({
 			completion = {
 				completeopt = "menu,menuone,noselect",
 			},
@@ -125,23 +125,27 @@ return {
 					return vim_item
 				end,
 			},
-			sources = {
-				{
-					name = "nvim_lsp",
-				},
-				{
-					name = "nvim_lua",
-				},
-				{
-					name = "luasnip",
-				},
-				{
-					name = "buffer",
-				},
-				{
-					name = "path",
-				},
+		sources = {
+			{
+				name = "codeium",
+				priority = 1000,
 			},
+			{
+				name = "nvim_lsp",
+			},
+			{
+				name = "nvim_lua",
+			},
+			{
+				name = "luasnip",
+			},
+			{
+				name = "buffer",
+			},
+			{
+				name = "path",
+			},
+		},
 			confirm_opts = {
 				behavior = cmp.ConfirmBehavior.Replace,
 				select = false,

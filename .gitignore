@@ -1,0 +1,13 @@
+# Tmux plugins (managed by TPM)
+tmux/.tmux/plugins/
+
+# macOS
+.DS_Store
+
+# Vim/Neovim
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

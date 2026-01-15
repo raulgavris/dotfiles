@@ -64,10 +64,10 @@ local keymaps = {
 		["]d"] = { cmd = ":lua vim.diagnostic.goto_next()<CR>", desc = "Go to next diagnostic" },
 		["[d"] = { cmd = ":lua vim.diagnostic.goto_prev()<CR>", desc = "Go to previous diagnostic" },
 		["<leader>d"] = { cmd = ":lua vim.diagnostic.open_float()<CR>", desc = "Show line diagnostics" },
-		["<leader>ca"] = { cmd = ":lua vim.lsp.buf.code_action()<CR>", desc = "See available code actions" },
-		["<leader>rs"] = { cmd = ":LspRestart<CR>", desc = "Restart LSP" },
-		["<C-e>"] = { cmd = ":NvimTreeToggle<CR>", desc = "Open File Explorer", opt = { silent = true } },
-		--#region Harpoon
+	["<leader>ca"] = { cmd = ":lua vim.lsp.buf.code_action()<CR>", desc = "See available code actions" },
+	["<leader>rs"] = { cmd = ":LspRestart<CR>", desc = "Restart LSP" },
+	-- File explorer (Neo-tree) keybindings are in plugins/neo-tree.lua
+	--#region Harpoon
 		["<leader>hp"] = { cmd = ":lua require('harpoon.ui').nav_prev()<CR>", desc = "Go to previous harpoon mark" },
 		["<leader>hn"] = { cmd = ":lua require('harpoon.ui').nav_next()<CR>", desc = "Go to next harpoon mark" },
 		["<leader>hm"] = { cmd = ":lua require('harpoon.mark').add_file()<CR>", desc = "Mark file with harpoon" },
@@ -154,8 +154,7 @@ local keymaps = {
 		--#endregion
 	},
 	visual_block_mode = {
-		["<C-w>j"] = { cmd = ":m '>+1<CR>gv=gv", desc = "Move the selected text down" },
-		["<C-w>k"] = { cmd = ":m '<-2<CR>gv=gv", desc = "Move the selected text up" },
+		-- No specific keymaps for visual block mode (uses visual_mode keymaps)
 	},
 	command_mode = {
 		["<Tab>"] = { cmd = forward_search, desc = "Word Search Increment" },
@@ -172,11 +171,8 @@ set_keymaps(keymaps.visual_mode, modes.visual_mode)
 set_keymaps(keymaps.visual_block_mode, modes.visual_block_mode)
 set_keymaps(keymaps.command_mode, modes.command_mode)
 -- disable_arrows()
--- these should not bet in the whichkey table
-vim.g.copilot_no_tab_map = true
-vim.g.copilot_assume_mapped = true
-vim.g.copilot_tab_fallback = ""
-vim.api.nvim_set_keymap("i", ",<Tab>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
+
+
 -- vim.keymap.set("i", "jj", "<CR>")
 
 return keymaps

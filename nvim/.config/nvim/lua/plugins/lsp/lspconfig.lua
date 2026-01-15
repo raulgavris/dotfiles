@@ -2,7 +2,6 @@ return {
 	"neovim/nvim-lspconfig",
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
-		"jose-elias-alvarez/typescript.nvim",
 		"RRethy/vim-illuminate",
 		"hrsh7th/cmp-nvim-lsp",
 		{
@@ -11,14 +10,22 @@ return {
 		},
 	},
 	config = function()
-		-- import lspconfig plugin
-		local lspconfig = require("lspconfig")
+	-- Suppress deprecation warnings for nvim-lspconfig (Neovim 0.11+)
+	-- The old API still works perfectly, just shows warnings about future changes
+	-- Will migrate to vim.lsp.config when nvim-lspconfig stabilizes the new API
+	local notify = vim.notify
+	vim.notify = function(msg, ...)
+		if msg and type(msg) == "string" and (msg:match("lspconfig") or msg:match("deprecated")) then
+			return
+		end
+		notify(msg, ...)
+	end
 
-		-- import cmp-nvim-lsp plugin
-		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+	-- import lspconfig plugin
+	local lspconfig = require("lspconfig")
 
-		-- import typescript plugin
-		local typescript = require("typescript")
+	-- import cmp-nvim-lsp plugin
+	local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
 		-- enable keybinds only for when lsp server available
 		local on_attach = function(client, bufnr)
@@ -62,21 +69,20 @@ return {
 			},
 		})
 
-		-- configure html server
-		lspconfig["html"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
+	-- configure html server
+	lspconfig["html"].setup({
+		capabilities = capabilities,
+		on_attach = on_attach,
+	})
 
-		-- configure typescript server with plugin
-		typescript.setup({
-			server = {
-				capabilities = capabilities,
-				on_attach = on_attach,
-			},
-		})
+	-- configure typescript/javascript server
+	lspconfig["ts_ls"].setup({
+		capabilities = capabilities,
+		on_attach = on_attach,
+		filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+	})
 
-		-- configure css server
+	-- configure css server
 		lspconfig["cssls"].setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
@@ -128,5 +134,8 @@ return {
 				},
 			},
 		})
+
+		-- Restore original notify after all LSP setups
+		vim.notify = notify
 	end,
 }
