@@ -50,7 +50,7 @@ return {
 				dashboard.button("2", " " .. " Find project", ":Telescope project <CR>"),
 				dashboard.button("3", " " .. " Find file", ":Telescope find_files <CR>"),
 				dashboard.button("4", "󰷾 " .. " Find text", ":Telescope live_grep <CR>"),
-				dashboard.button("5", " " .. " File browser", ":NvimTreeOpen <CR>"),
+				dashboard.button("5", " " .. " File browser", ":Neotree toggle <CR>"),
 				dashboard.button("6", "󰄉 " .. " Recent files", ":Telescope oldfiles <CR>"),
 				dashboard.button("7", " " .. " Config", ":e $MYVIMRC <CR>"),
 				dashboard.button("8", "󰒲 " .. " Lazy", ":Lazy<CR>"),

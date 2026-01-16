@@ -60,18 +60,23 @@ return {
 				["ui-select"] = { themes.get_dropdown({}) },
 				project = {
 					base_dirs = {
-						"/Users/raulgavris/Projects/pws-devs/karma-frontend",
-						"/Users/raulgavris/Projects/pws-devs/karma-backend",
-						"/Users/raulgavris/Projects/pws-devs/tokenexchange-frontend",
-						"/Users/raulgavris/Projects/pws-devs/tokenexchange-admin",
-						"/Users/raulgavris/Projects/pws-devs/houdiniswap-backend",
-						"/Users/raulgavris/Projects/personal/dotfiles/nvim/.config/nvim",
+						-- PWS workspace
+						"/Users/raulgavris/Projects/pws/houdiniswap-backend",
+						"/Users/raulgavris/Projects/pws/houdini-swap-web",
+						"/Users/raulgavris/Projects/pws/tokenexchange-admin",
+						"/Users/raulgavris/Projects/productivityApp",
+						"/Users/raulgavris/Projects/dotfiles",
 					},
-					hidden_files = true, -- default: false
+					hidden_files = true,
 					theme = "dropdown",
 					order_by = "asc",
 					search_by = "title",
-					sync_with_nvim_tree = true, -- default false
+					on_project_selected = function(prompt_bufnr)
+						-- Switch to project and open Neo-tree
+						local project_actions = require("telescope._extensions.project.actions")
+						project_actions.change_working_directory(prompt_bufnr, false)
+						vim.cmd("Neotree reveal")
+					end,
 				},
 			},
 		})
