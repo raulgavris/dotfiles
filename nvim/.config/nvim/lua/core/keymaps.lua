@@ -36,8 +36,72 @@ local function backward_search()
 	return "<S-Tab>"
 end
 
--- Store last executed command for quick repeat
-_G.last_palette_cmd = nil
+-- Store recent executed commands for quick repeat (max 5)
+_G.recent_palette_cmds = _G.recent_palette_cmds or {}
+
+-- Helper to add command to recent list
+local function add_to_recent(cmd)
+	-- Remove if already exists
+	for i, c in ipairs(_G.recent_palette_cmds) do
+		if c == cmd then
+			table.remove(_G.recent_palette_cmds, i)
+			break
+		end
+	end
+	-- Add to front
+	table.insert(_G.recent_palette_cmds, 1, cmd)
+	-- Keep only 5
+	while #_G.recent_palette_cmds > 5 do
+		table.remove(_G.recent_palette_cmds)
+	end
+end
+
+-- Helper to reorder actions with recent commands at top
+local function reorder_with_recent(actions)
+	local recent_actions = {}
+	local other_actions = {}
+	local recent_set = {}
+
+	-- Build set of recent commands for quick lookup
+	for _, cmd in ipairs(_G.recent_palette_cmds) do
+		recent_set[cmd] = true
+	end
+
+	-- Separate recent from others
+	for _, action in ipairs(actions) do
+		if recent_set[action.cmd] then
+			table.insert(recent_actions, action)
+		else
+			table.insert(other_actions, action)
+		end
+	end
+
+	-- Sort recent_actions by order in recent_palette_cmds
+	table.sort(recent_actions, function(a, b)
+		local idx_a, idx_b = 999, 999
+		for i, cmd in ipairs(_G.recent_palette_cmds) do
+			if cmd == a.cmd then idx_a = i end
+			if cmd == b.cmd then idx_b = i end
+		end
+		return idx_a < idx_b
+	end)
+
+	-- Mark recent actions with ↺
+	for i, action in ipairs(recent_actions) do
+		recent_actions[i] = { name = "↺ " .. action.name, cmd = action.cmd }
+	end
+
+	-- Combine: recent first, then others
+	local result = {}
+	for _, action in ipairs(recent_actions) do
+		table.insert(result, action)
+	end
+	for _, action in ipairs(other_actions) do
+		table.insert(result, action)
+	end
+
+	return result
+end
 
 -- Visual mode command palette with selection-aware actions
 function _G.visual_command_palette()
@@ -52,16 +116,7 @@ function _G.visual_command_palette()
 		{ name = "Lowercase", cmd = "'<,'>s/.*/\\L&/" },
 	}
 
-	-- Move last command to top if exists
-	if _G.last_palette_cmd then
-		for i, action in ipairs(actions) do
-			if action.cmd == _G.last_palette_cmd then
-				table.remove(actions, i)
-				table.insert(actions, 1, { name = "↺ " .. action.name, cmd = action.cmd })
-				break
-			end
-		end
-	end
+	actions = reorder_with_recent(actions)
 
 	vim.ui.select(actions, {
 		prompt = "Command Palette (Visual)",
@@ -70,7 +125,7 @@ function _G.visual_command_palette()
 		end,
 	}, function(choice)
 		if choice then
-			_G.last_palette_cmd = choice.cmd
+			add_to_recent(choice.cmd)
 			vim.cmd(choice.cmd)
 		end
 	end)
@@ -174,16 +229,7 @@ local function command_palette()
 		{ name = "Restore Session", cmd = "lua require('persistence').load()" },
 	}
 
-	-- Move last command to top if exists
-	if _G.last_palette_cmd then
-		for i, action in ipairs(actions) do
-			if action.cmd == _G.last_palette_cmd then
-				table.remove(actions, i)
-				table.insert(actions, 1, { name = "↺ " .. action.name, cmd = action.cmd })
-				break
-			end
-		end
-	end
+	actions = reorder_with_recent(actions)
 
 	vim.ui.select(actions, {
 		prompt = "Command Palette",
@@ -192,7 +238,7 @@ local function command_palette()
 		end,
 	}, function(choice)
 		if choice then
-			_G.last_palette_cmd = choice.cmd
+			add_to_recent(choice.cmd)
 			vim.cmd(choice.cmd)
 		end
 	end)

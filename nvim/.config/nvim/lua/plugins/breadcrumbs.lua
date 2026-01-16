@@ -36,7 +36,7 @@ return {
 			},
 			lsp = {
 				auto_attach = true,
-				preference = nil,
+				preference = { "typescript-tools" }, -- Prefer over ts_ls
 			},
 			highlight = true,
 			separator = " > ",

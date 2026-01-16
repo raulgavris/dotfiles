@@ -46,7 +46,11 @@ return {
 			},
 		})
 
-		-- ts_ls disabled - using typescript-tools.nvim instead for better performance
+		-- Explicitly disable ts_ls - using typescript-tools.nvim instead
+		vim.lsp.config("ts_ls", {
+			filetypes = {}, -- Disable completely
+			root_markers = {},
+		})
 
 		vim.lsp.config("graphql", {
 			filetypes = { "graphql", "gql", "typescriptreact", "javascriptreact" },
@@ -109,8 +113,10 @@ return {
 			filetypes = { "dockerfile" },
 		})
 
-		-- Enable all LSP servers
-		-- Note: TypeScript handled by typescript-tools.nvim (not ts_ls)
+		-- Disable ts_ls (using typescript-tools.nvim instead)
+		vim.lsp.enable("ts_ls", false)
+
+		-- Enable LSP servers
 		vim.lsp.enable({
 			-- JavaScript/TypeScript linting
 			"eslint",
@@ -119,19 +125,21 @@ return {
 			"cssls",
 			"tailwindcss",
 			"emmet_ls",
-			-- Python
-			"pyright",
-			-- C/C++
-			"clangd",
-			-- Docker
-			"dockerls",
-			"docker_compose_language_service",
-			-- Other
-			"lua_ls",
-			"graphql",
-			"prismals",
+			-- Config files
 			"jsonls",
 			"yamlls",
+			-- Lua (for Neovim config)
+			"lua_ls",
+			-- Docker (uncomment if needed)
+			-- "dockerls",
+			-- "docker_compose_language_service",
+			-- GraphQL/Prisma (uncomment if needed)
+			-- "graphql",
+			-- "prismals",
+			-- Python (uncomment if needed)
+			-- "pyright",
+			-- C/C++ (uncomment if needed)
+			-- "clangd",
 		})
 	end,
 }
