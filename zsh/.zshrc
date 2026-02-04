@@ -118,6 +118,8 @@ alias l='ls -lh'
 ## Editor
 alias vim='nvim'
 alias v='nvim'
+alias code='agy'
+alias cursor='agy'
 
 ## Tmux
 alias t='~/.tmux/attach-or-create.sh'
@@ -239,3 +241,16 @@ export FZF_DEFAULT_OPTS='--height 40% --reverse --border --preview-window=right:
 if command -v fortune &>/dev/null && command -v cowsay &>/dev/null && command -v lolcat &>/dev/null; then
     fortune | cowsay | lolcat
 fi
+
+# bun completions
+[ -s "/Users/raulgavris/.bun/_bun" ] && source "/Users/raulgavris/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Added by Antigravity
+export PATH="/Users/raulgavris/.antigravity/antigravity/bin:$PATH"
+
+# Added by Antigravity
+export PATH="/Users/raulgavris/.antigravity/antigravity/bin:$PATH"
