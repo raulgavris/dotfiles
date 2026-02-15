@@ -3,7 +3,6 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"nvim-lua/plenary.nvim",
-		"nvimtools/none-ls-extras.nvim", -- Extra sources including eslint
 	},
 	config = function()
 		local null_ls = require("null-ls")
@@ -35,13 +34,6 @@ return {
 						"vue",
 					},
 					prefer_local = "node_modules/.bin",
-				}),
-
-				-- ESLint for JS/TS/React
-				require("none-ls.diagnostics.eslint_d").with({
-					condition = function(utils)
-						return utils.root_has_file({ ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", "eslint.config.js", "eslint.config.mjs" })
-					end,
 				}),
 
 				-- Python

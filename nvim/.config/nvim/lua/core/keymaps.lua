@@ -1,5 +1,3 @@
-local fn = vim.fn
-
 local modes = {
 	normal_mode = "n",
 	insert_mode = "i",
@@ -9,28 +7,15 @@ local modes = {
 	command_mode = "c",
 }
 
-local function close()
-	if vim.bo.buftype == "terminal" then
-		vim.cmd("Bdelete!")
-		vim.cmd("silent! close")
-	elseif #vim.api.nvim_list_wins() > 1 then
-		vim.cmd("silent! close")
-	else
-		vim.notify("Can't Close Window", vim.log.levels.WARN, {
-			title = "Close Window",
-		})
-	end
-end
-
 local function forward_search()
-	if fn.getcmdtype() == "/" or fn.getcmdtype() == "?" then
+	if vim.fn.getcmdtype() == "/" or vim.fn.getcmdtype() == "?" then
 		return "<CR>/<C-r>/"
 	end
 	return "<C-z>"
 end
 
 local function backward_search()
-	if fn.getcmdtype() == "/" or fn.getcmdtype() == "?" then
+	if vim.fn.getcmdtype() == "/" or vim.fn.getcmdtype() == "?" then
 		return "<CR>?<C-r>/"
 	end
 	return "<S-Tab>"
@@ -86,7 +71,7 @@ local function reorder_with_recent(actions)
 		return idx_a < idx_b
 	end)
 
-	-- Mark recent actions with ↺
+	-- Mark recent actions
 	for i, action in ipairs(recent_actions) do
 		recent_actions[i] = { name = "↺ " .. action.name, cmd = action.cmd }
 	end
@@ -110,7 +95,7 @@ function _G.visual_command_palette()
 		{ name = "Format Selection", cmd = "lua vim.lsp.buf.format()" },
 		{ name = "Sort Lines", cmd = "'<,'>sort" },
 		{ name = "Join Lines", cmd = "'<,'>join" },
-		{ name = "Search Selection", cmd = "lua require('spectre').open_visual()" },
+		{ name = "Search Selection", cmd = "lua require('grug-far').open({ prefills = { search = vim.fn.expand('<cword>') } })" },
 		{ name = "Send to Claude", cmd = "ClaudeCodeSend" },
 		{ name = "Uppercase", cmd = "'<,'>s/.*/\\U&/" },
 		{ name = "Lowercase", cmd = "'<,'>s/.*/\\L&/" },
@@ -139,10 +124,10 @@ local function command_palette()
 		{ name = "Find in Files", cmd = "Telescope live_grep" },
 
 		-- Code Actions
-		{ name = "Format Document", cmd = "lua vim.lsp.buf.format()" },
+		{ name = "Format Document", cmd = "Format" },
 		{ name = "Code Actions", cmd = "lua vim.lsp.buf.code_action()" },
 		{ name = "Quick Fix", cmd = "lua vim.lsp.buf.code_action({ context = { only = { 'quickfix' } } })" },
-		{ name = "Rename Symbol", cmd = "lua vim.lsp.buf.rename()" },
+		{ name = "Rename Symbol", cmd = "IncRename " .. vim.fn.expand("<cword>") },
 		{ name = "Organize Imports", cmd = "lua vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })" },
 
 		-- Tailwind CSS
@@ -176,14 +161,15 @@ local function command_palette()
 		{ name = "Go to Symbol in Workspace", cmd = "Telescope lsp_workspace_symbols" },
 		{ name = "Go to Definition", cmd = "Telescope lsp_definitions" },
 		{ name = "Go to Implementation", cmd = "Telescope lsp_implementations" },
+		{ name = "Go to Type Definition", cmd = "Telescope lsp_type_definitions" },
 		{ name = "Find References", cmd = "Telescope lsp_references" },
 		{ name = "Recent Files", cmd = "Telescope oldfiles" },
 		{ name = "Open Buffers", cmd = "Telescope buffers" },
 		{ name = "Outline (Aerial)", cmd = "AerialToggle" },
 
 		-- Search & Replace
-		{ name = "Search and Replace", cmd = "lua require('spectre').toggle()" },
-		{ name = "Search Current Word", cmd = "lua require('spectre').open_visual({ select_word = true })" },
+		{ name = "Search and Replace", cmd = "lua require('grug-far').open()" },
+		{ name = "Search Current Word", cmd = "lua require('grug-far').open({ prefills = { search = vim.fn.expand('<cword>') } })" },
 
 		-- Git
 		{ name = "Git Status", cmd = "Telescope git_status" },
@@ -192,41 +178,50 @@ local function command_palette()
 		{ name = "Git Diff", cmd = "lua require('gitsigns').diffthis()" },
 		{ name = "LazyGit", cmd = "LazyGit" },
 		{ name = "Diffview Open", cmd = "DiffviewOpen" },
+		{ name = "Octo PR List", cmd = "Octo pr list" },
 
 		-- Debugging
 		{ name = "Debug: Start/Continue", cmd = "lua require('dap').continue()" },
 		{ name = "Debug: Toggle Breakpoint", cmd = "lua require('dap').toggle_breakpoint()" },
-		{ name = "Debug: Conditional Breakpoint", cmd = "lua require('dap').set_breakpoint(vim.fn.input('Condition: '))" },
-		{ name = "Debug: Step Over (next)", cmd = "lua require('dap').step_over()" },
+		{ name = "Debug: Step Over", cmd = "lua require('dap').step_over()" },
 		{ name = "Debug: Step Into", cmd = "lua require('dap').step_into()" },
-		{ name = "Debug: Step Out (finish)", cmd = "lua require('dap').step_out()" },
-		{ name = "Debug: Pause", cmd = "lua require('dap').pause()" },
-		{ name = "Debug: Restart", cmd = "lua require('dap').restart()" },
+		{ name = "Debug: Step Out", cmd = "lua require('dap').step_out()" },
 		{ name = "Debug: Terminate", cmd = "lua require('dap').terminate()" },
 		{ name = "Debug: Toggle UI", cmd = "lua require('dapui').toggle()" },
-		{ name = "Debug: Toggle REPL", cmd = "lua require('dap').repl.toggle()" },
-		{ name = "Debug: Hover Variable", cmd = "lua require('dap.ui.widgets').hover()" },
-		{ name = "Debug: Run Last", cmd = "lua require('dap').run_last()" },
 
 		-- Testing
 		{ name = "Test: Run Nearest", cmd = "lua require('neotest').run.run()" },
 		{ name = "Test: Run File", cmd = "lua require('neotest').run.run(vim.fn.expand('%'))" },
 		{ name = "Test: Run All", cmd = "lua require('neotest').run.run({ suite = true })" },
-		{ name = "Test: Run Last", cmd = "lua require('neotest').run.run_last()" },
 		{ name = "Test: Toggle Summary", cmd = "lua require('neotest').summary.toggle()" },
 		{ name = "Test: Show Output", cmd = "lua require('neotest').output.open({ enter = true })" },
-		{ name = "Test: Debug Nearest", cmd = "lua require('neotest').run.run({ strategy = 'dap' })" },
-		{ name = "Test: Stop", cmd = "lua require('neotest').run.stop()" },
 
 		-- Diagnostics
 		{ name = "Show All Diagnostics", cmd = "Trouble diagnostics" },
 		{ name = "Show Buffer Diagnostics", cmd = "Trouble diagnostics filter.buf=0" },
+
+		-- Workspaces
+		{ name = "Workspace: Select", cmd = "WorkspaceSelect" },
+		{ name = "Workspace: Info", cmd = "WorkspaceInfo" },
+		{ name = "Workspace: Close", cmd = "WorkspaceClose" },
+		{ name = "Workspace: Find Files", cmd = "lua require('core.workspaces').find_files()" },
+		{ name = "Workspace: Grep", cmd = "lua require('core.workspaces').live_grep()" },
+
+		-- LSP extras
+		{ name = "Incoming Calls (who calls this)", cmd = "lua vim.lsp.buf.incoming_calls()" },
+		{ name = "Outgoing Calls (what this calls)", cmd = "lua vim.lsp.buf.outgoing_calls()" },
+		{ name = "Toggle Inlay Hints", cmd = "lua vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())" },
+		{ name = "Run Code Lens", cmd = "lua vim.lsp.codelens.run()" },
+
+		-- Markdown
+		{ name = "Markdown Preview", cmd = "MarkdownPreviewToggle" },
 
 		-- Editor
 		{ name = "Toggle File Tree", cmd = "Neotree toggle" },
 		{ name = "Toggle Terminal", cmd = "lua require('FTerm').toggle()" },
 		{ name = "Toggle Word Wrap", cmd = "set wrap!" },
 		{ name = "Restore Session", cmd = "lua require('persistence').load()" },
+		{ name = "Notification History", cmd = "Noice history" },
 	}
 
 	actions = reorder_with_recent(actions)
@@ -244,70 +239,79 @@ local function command_palette()
 	end)
 end
 
--- Search current buffer
-local function search_current_buffer()
-	require("telescope.builtin").current_buffer_fuzzy_find({
-		previewer = false,
-		layout_config = { width = 0.8 },
-	})
-end
-
 local keymaps = {
 	normal_mode = {
-		--#region VS Code / Cursor style keybindings (Ctrl = Cmd)
-		["<C-p>"] = { cmd = ":Telescope find_files<CR>", desc = "Quick open file" },
-		["<C-P>"] = { cmd = command_palette, desc = "Command palette" },
-		["<leader>cp"] = { cmd = command_palette, desc = "Command palette" },
-		["<C-f>"] = { cmd = search_current_buffer, desc = "Search in current file" },
-		["<C-g>"] = { cmd = ":Telescope live_grep<CR>", desc = "Search in project" },
-		["<C-b>"] = { cmd = ":Neotree toggle<CR>", desc = "Toggle file tree" },
-		["<C-s>"] = { cmd = ":w<CR>", desc = "Save file" },
-		["<C-w>"] = { cmd = ":bdelete<CR>", desc = "Close buffer" },
-		["<C-z>"] = { cmd = "u", desc = "Undo" },
-		["<C-y>"] = { cmd = "<C-r>", desc = "Redo" },
-		--#endregion
-
 		--#region LSP
-		["K"] = { cmd = ":lua vim.lsp.buf.hover()<CR>", desc = "Show documentation for what is under cursor" },
-		["]d"] = { cmd = ":lua vim.diagnostic.goto_next()<CR>", desc = "Go to next diagnostic" },
-		["[d"] = { cmd = ":lua vim.diagnostic.goto_prev()<CR>", desc = "Go to previous diagnostic" },
-		["<leader>d"] = { cmd = ":lua vim.diagnostic.open_float()<CR>", desc = "Show line diagnostics" },
-		["<leader>ca"] = { cmd = ":lua vim.lsp.buf.code_action()<CR>", desc = "See available code actions" },
-		["<leader>rs"] = { cmd = ":LspRestart<CR>", desc = "Restart LSP" },
-		["<leader>rn"] = { cmd = ":lua vim.lsp.buf.rename()<CR>", desc = "Rename symbol" },
-		["<leader>fm"] = { cmd = ":lua vim.lsp.buf.format()<CR>", desc = "Format document" },
+		["K"] = { cmd = ":lua vim.lsp.buf.hover()<CR>", desc = "Show hover documentation" },
+		["]d"] = { cmd = ":lua vim.diagnostic.goto_next()<CR>", desc = "Next diagnostic" },
+		["[d"] = { cmd = ":lua vim.diagnostic.goto_prev()<CR>", desc = "Previous diagnostic" },
+		["]e"] = { cmd = ":lua vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })<CR>", desc = "Next error" },
+		["[e"] = { cmd = ":lua vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })<CR>", desc = "Previous error" },
+		["<leader>ld"] = { cmd = ":lua vim.diagnostic.open_float()<CR>", desc = "Line diagnostics" },
+		["<leader>la"] = { cmd = ":lua vim.lsp.buf.code_action()<CR>", desc = "Code action" },
+		["<leader>lr"] = { cmd = ":LspRestart<CR>", desc = "Restart LSP" },
+		["<leader>rn"] = {
+			cmd = function()
+				return ":IncRename " .. vim.fn.expand("<cword>")
+			end,
+			opt = { expr = true, silent = false },
+			desc = "Rename symbol (live preview)",
+		},
+		["<leader>lf"] = { cmd = ":Format<CR>", desc = "Format document" },
+		["<leader>lt"] = { cmd = ":Telescope lsp_type_definitions<CR>", desc = "Type definitions" },
+		["<leader>li"] = { cmd = ":Telescope lsp_implementations<CR>", desc = "Implementations" },
+		["<leader>lD"] = { cmd = ":Telescope diagnostics bufnr=0<CR>", desc = "Buffer diagnostics" },
+		["<leader>lh"] = { cmd = ":lua vim.lsp.buf.incoming_calls()<CR>", desc = "Incoming calls (who calls this)" },
+		["<leader>lH"] = { cmd = ":lua vim.lsp.buf.outgoing_calls()<CR>", desc = "Outgoing calls (what this calls)" },
+		["<leader>lI"] = {
+			cmd = function()
+				vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+			end,
+			desc = "Toggle inlay hints",
+		},
+		["<leader>lL"] = { cmd = ":lua vim.lsp.codelens.run()<CR>", desc = "Run code lens" },
 		--#endregion
 
-		--#region Harpoon
-		["<leader>hp"] = { cmd = ":lua require('harpoon.ui').nav_prev()<CR>", desc = "Go to previous harpoon mark" },
-		["<leader>hn"] = { cmd = ":lua require('harpoon.ui').nav_next()<CR>", desc = "Go to next harpoon mark" },
-		["<leader>hm"] = { cmd = ":lua require('harpoon.mark').add_file()<CR>", desc = "Mark file with harpoon" },
+		--#region Command Palette (Telescope keymaps are in telescope.lua keys table)
+		["<leader>cp"] = { cmd = command_palette, desc = "Command palette" },
 		--#endregion
 
-		--#region Telescope
-		["gt"] = { cmd = ":Telescope lsp_type_definitions<CR>", desc = "Show LSP type definitions" },
-		["gi"] = { cmd = ":Telescope lsp_implementations<CR>", desc = "Show LSP implementations" },
-		["gd"] = { cmd = ":Telescope lsp_definitions<CR>", desc = "Show LSP definitions" },
-		["gR"] = { cmd = ":Telescope lsp_references<CR>", desc = "Show LSP references" },
-		["<leader>u"] = { cmd = ":Telescope undo<CR>", desc = "Show undos" },
-		["<leader>D"] = { cmd = ":Telescope diagnostics bufnr=0<CR>", desc = "Show buffer diagnostics" },
-		["<leader>gfc"] = { cmd = ":Telescope git_bcommits<CR>", desc = "Show git commits for current buffer" },
-		["<leader>gc"] = { cmd = ":Telescope git_commits<CR>", desc = "Show git commits" },
-		["<leader>hf"] = { cmd = ":Telescope harpoon marks<CR>", desc = "Show harpoon marks" },
-		["<leader>fb"] = { cmd = ":Telescope buffers<CR>", desc = "Show open buffers" },
-		["<leader>fc"] = { cmd = ":Telescope grep_string<CR>", desc = "Find string under cursor in cwd" },
-		["<leader>fr"] = { cmd = ":Telescope oldfiles<CR>", desc = "Fuzzy find recent files" },
-		["<leader>fg"] = { cmd = ":Telescope live_grep<CR>", desc = "Search in project" },
-		["<leader>ff"] = { cmd = ":Telescope find_files<CR>", desc = "Quick open file" },
-		["<leader>gs"] = { cmd = ":Telescope git_status<CR>", desc = "Show git status" },
-		["<leader>gb"] = { cmd = ":Telescope git_branches<CR>", desc = "Show git branches" },
-		["<leader>ch"] = { cmd = ":Telescope command_history<CR>", desc = "Command history" },
-		["<leader>:"] = { cmd = ":Telescope commands<CR>", desc = "All commands" },
+		--#region Workspaces
+		["<leader>ws"] = { cmd = ":WorkspaceSelect<CR>", desc = "Select workspace" },
+		["<leader>wi"] = { cmd = ":WorkspaceInfo<CR>", desc = "Workspace info" },
+		["<leader>wc"] = { cmd = ":WorkspaceClose<CR>", desc = "Close workspace" },
+		["<leader>wf"] = { cmd = ":lua require('core.workspaces').find_files()<CR>", desc = "Find files (workspace)" },
+		["<leader>wg"] = { cmd = ":lua require('core.workspaces').live_grep()<CR>", desc = "Grep (workspace)" },
+		["<leader>ww"] = { cmd = ":lua require('core.workspaces').grep_string()<CR>", desc = "Grep word (workspace)" },
+		--#endregion
+
+		--#region Git (non-telescope — telescope git keymaps in telescope.lua keys table)
+		["<leader>ge"] = { cmd = ":Neotree float git_status<CR>", desc = "Git status (Neo-tree)" },
+		["<leader>gl"] = { cmd = ":lua require('gitsigns').blame_line({ full = true })<CR>", desc = "Blame line" },
+		["<leader>gp"] = { cmd = ":lua require('gitsigns').preview_hunk()<CR>", desc = "Preview hunk" },
+		--#endregion
+
+		--#region Hunks (Gitsigns)
+		["<leader>hs"] = { cmd = ":lua require('gitsigns').stage_hunk()<CR>", desc = "Stage hunk" },
+		["<leader>hr"] = { cmd = ":lua require('gitsigns').reset_hunk()<CR>", desc = "Reset hunk" },
+		["<leader>hu"] = { cmd = ":lua require('gitsigns').undo_stage_hunk()<CR>", desc = "Undo stage hunk" },
+		["<leader>hS"] = { cmd = ":lua require('gitsigns').stage_buffer()<CR>", desc = "Stage buffer" },
+		["<leader>hR"] = { cmd = ":lua require('gitsigns').reset_buffer()<CR>", desc = "Reset buffer" },
+		["<leader>hd"] = { cmd = ":lua require('gitsigns').diffthis()<CR>", desc = "Diff this" },
+		["]h"] = { cmd = ":lua require('gitsigns').nav_hunk('next')<CR>", desc = "Next hunk" },
+		["[h"] = { cmd = ":lua require('gitsigns').nav_hunk('prev')<CR>", desc = "Previous hunk" },
+		--#endregion
+
+		--#region Diffview (Git diff)
+		["<leader>gdo"] = { cmd = ":DiffviewOpen<CR>", desc = "Open Diffview" },
+		["<leader>gdc"] = { cmd = ":DiffviewClose<CR>", desc = "Close Diffview" },
+		["<leader>gdh"] = { cmd = ":DiffviewFileHistory<CR>", desc = "File History" },
+		["<leader>gdH"] = { cmd = ":DiffviewFileHistory %<CR>", desc = "Current File History" },
 		--#endregion
 
 		--#region TypeScript (typescript-tools.nvim)
-		["<leader>oi"] = { cmd = ":TSToolsOrganizeImports<CR>", desc = "Organize imports" },
-		["<leader>os"] = { cmd = ":TSToolsSortImports<CR>", desc = "Sort imports" },
+		["<leader>roi"] = { cmd = ":TSToolsOrganizeImports<CR>", desc = "Organize imports" },
+		["<leader>ros"] = { cmd = ":TSToolsSortImports<CR>", desc = "Sort imports" },
 		["<leader>ru"] = { cmd = ":TSToolsRemoveUnusedImports<CR>", desc = "Remove unused imports" },
 		["<leader>ri"] = { cmd = ":TSToolsAddMissingImports<CR>", desc = "Add missing imports" },
 		["<leader>rf"] = { cmd = ":TSToolsRenameFile<CR>", desc = "Rename file and update imports" },
@@ -315,62 +319,42 @@ local keymaps = {
 		["<leader>rd"] = { cmd = ":TSToolsGoToSourceDefinition<CR>", desc = "Go to source definition" },
 		--#endregion
 
-		--#region Tabs
-		["<leader>to"] = { cmd = ":tabnew<CR>", desc = "Open new tab" },
-		["<leader>tx"] = { cmd = ":tabclose<CR>", desc = "Close current tab" },
-		["<leader>tn"] = { cmd = ":tabn<CR>", desc = "Go to next tab" },
-		["<leader>tp"] = { cmd = ":tabp<CR>", desc = "Go to prev tab" },
-		["<leader>tf"] = { cmd = ":tabnew %<CR>", desc = "Open current buffer in new tab" },
+		--#region Buffer
+		["<leader>bd"] = { cmd = ":lua require('mini.bufremove').delete()<CR>", desc = "Delete buffer" },
+		["<leader>bD"] = { cmd = ":lua require('mini.bufremove').delete(0, true)<CR>", desc = "Force delete buffer" },
+		["<leader>bo"] = {
+			cmd = function()
+				local current = vim.api.nvim_get_current_buf()
+				for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+					if buf ~= current and vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == "" then
+						pcall(vim.api.nvim_buf_delete, buf, {})
+					end
+				end
+			end,
+			desc = "Close other buffers",
+		},
 		--#endregion
 
 		--#region Splits
-		["<leader>sq"] = { cmd = ":close<CR>", desc = "Split quit" },
-		["<leader>se"] = { cmd = "<C-w>=", desc = "Split equal" },
+		["<leader>sq"] = { cmd = ":close<CR>", desc = "Close split" },
+		["<leader>se"] = { cmd = "<C-w>=", desc = "Equalize splits" },
 		["<leader>sv"] = { cmd = "<C-w>v", desc = "Split vertically" },
 		["<leader>sh"] = { cmd = "<C-w>s", desc = "Split horizontally" },
 		--#endregion
 
-		--#region Indent & Move Lines
-		["<"] = { cmd = "<<", desc = "Indent backward" },
-		[">"] = { cmd = ">>", desc = "Indent forward" },
+		--#region Move Lines
 		["<A-k>"] = { cmd = ":m .-2<CR>==", desc = "Move line up" },
 		["<A-j>"] = { cmd = ":m .+1<CR>==", desc = "Move line down" },
 		--#endregion
 
 		--#region File tree (Neo-tree)
-		["<C-e>"] = { cmd = ":Neotree toggle<CR>", desc = "Toggle file tree" },
-		["<leader>e"] = { cmd = ":Neotree focus<CR>", desc = "Focus file tree" },
-		["<leader>ge"] = { cmd = ":Neotree float git_status<CR>", desc = "Git status (Neo-tree)" },
-		--#endregion
-
-		--#region Debug (DAP)
-		["<leader>db"] = { cmd = ":lua require('dap').toggle_breakpoint()<CR>", desc = "Toggle breakpoint" },
-		["<leader>dB"] = { cmd = ":lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", desc = "Conditional breakpoint" },
-		["<leader>dc"] = { cmd = ":lua require('dap').continue()<CR>", desc = "Start/Continue debugger" },
-		["<leader>di"] = { cmd = ":lua require('dap').step_into()<CR>", desc = "Step into" },
-		["<leader>do"] = { cmd = ":lua require('dap').step_over()<CR>", desc = "Step over" },
-		["<leader>dO"] = { cmd = ":lua require('dap').step_out()<CR>", desc = "Step out" },
-		["<leader>dr"] = { cmd = ":lua require('dap').repl.toggle()<CR>", desc = "Toggle REPL" },
-		["<leader>dl"] = { cmd = ":lua require('dap').run_last()<CR>", desc = "Run last" },
-		["<leader>dt"] = { cmd = ":lua require('dap').terminate()<CR>", desc = "Terminate debugger" },
-		["<leader>du"] = { cmd = ":lua require('dapui').toggle()<CR>", desc = "Toggle DAP UI" },
-		["<leader>dh"] = { cmd = ":lua require('dap.ui.widgets').hover()<CR>", desc = "Hover variables" },
-		["<leader>dn"] = { cmd = ":lua require('dap').step_over()<CR>", desc = "Step over (next)" },
-		["<leader>ds"] = { cmd = ":lua require('dap').step_into()<CR>", desc = "Step into" },
-		["<leader>df"] = { cmd = ":lua require('dap').step_out()<CR>", desc = "Step out (finish)" },
-		["<leader>dp"] = { cmd = ":lua require('dap').pause()<CR>", desc = "Pause" },
-		["<leader>dR"] = { cmd = ":lua require('dap').restart()<CR>", desc = "Restart" },
+		["<leader>e"] = { cmd = ":Neotree toggle<CR>", desc = "Toggle file tree" },
+		["<leader>E"] = { cmd = ":Neotree focus<CR>", desc = "Focus file tree" },
 		--#endregion
 
 		--#region Aerial (Outline)
-		["<leader>o"] = { cmd = ":AerialToggle!<CR>", desc = "Toggle Outline (Aerial)" },
-		["<leader>O"] = { cmd = ":AerialOpen<CR>", desc = "Open Outline" },
-		--#endregion
-
-		--#region Spectre (Search & Replace)
-		["<leader>S"] = { cmd = ":lua require('spectre').toggle()<CR>", desc = "Toggle Spectre (Search & Replace)" },
-		["<leader>sw"] = { cmd = ":lua require('spectre').open_visual({ select_word = true })<CR>", desc = "Search current word" },
-		["<leader>sp"] = { cmd = ":lua require('spectre').open_file_search({ select_word = true })<CR>", desc = "Search in current file" },
+		["<leader>oo"] = { cmd = ":AerialToggle!<CR>", desc = "Toggle Outline" },
+		["<leader>oO"] = { cmd = ":AerialOpen<CR>", desc = "Open Outline" },
 		--#endregion
 
 		--#region Persistence (Session)
@@ -384,24 +368,15 @@ local keymaps = {
 		["[t"] = { cmd = ":lua require('todo-comments').jump_prev()<CR>", desc = "Previous todo comment" },
 		["<leader>xt"] = { cmd = ":TodoTrouble<CR>", desc = "Todo (Trouble)" },
 		["<leader>xT"] = { cmd = ":TodoTrouble keywords=TODO,FIX,FIXME<CR>", desc = "Todo/Fix/Fixme (Trouble)" },
-		["<leader>st"] = { cmd = ":TodoTelescope<CR>", desc = "Todo (Telescope)" },
-		["<leader>sT"] = { cmd = ":TodoTelescope keywords=TODO,FIX,FIXME<CR>", desc = "Todo/Fix/Fixme (Telescope)" },
 		--#endregion
 
 		--#region Trouble (Diagnostics)
 		["<leader>xx"] = { cmd = ":Trouble diagnostics toggle<CR>", desc = "Diagnostics (Trouble)" },
 		["<leader>xX"] = { cmd = ":Trouble diagnostics toggle filter.buf=0<CR>", desc = "Buffer Diagnostics (Trouble)" },
-		["<leader>cs"] = { cmd = ":Trouble symbols toggle focus=false<CR>", desc = "Symbols (Trouble)" },
-		["<leader>cl"] = { cmd = ":Trouble lsp toggle focus=false win.position=right<CR>", desc = "LSP Definitions/references (Trouble)" },
+		["<leader>xs"] = { cmd = ":Trouble symbols toggle focus=false<CR>", desc = "Symbols (Trouble)" },
+		["<leader>xl"] = { cmd = ":Trouble lsp toggle focus=false win.position=right<CR>", desc = "LSP Definitions/references (Trouble)" },
 		["<leader>xL"] = { cmd = ":Trouble loclist toggle<CR>", desc = "Location List (Trouble)" },
 		["<leader>xQ"] = { cmd = ":Trouble qflist toggle<CR>", desc = "Quickfix List (Trouble)" },
-		--#endregion
-
-		--#region Diffview (Git diff)
-		["<leader>gdo"] = { cmd = ":DiffviewOpen<CR>", desc = "Open Diffview" },
-		["<leader>gdc"] = { cmd = ":DiffviewClose<CR>", desc = "Close Diffview" },
-		["<leader>gdh"] = { cmd = ":DiffviewFileHistory<CR>", desc = "File History" },
-		["<leader>gdH"] = { cmd = ":DiffviewFileHistory %<CR>", desc = "Current File History" },
 		--#endregion
 
 		--#region Flash (Fast navigation)
@@ -420,45 +395,24 @@ local keymaps = {
 		["<leader>ad"] = { cmd = ":ClaudeCodeDiffDeny<CR>", desc = "Deny diff" },
 		--#endregion
 
-		--#region Window navigation
-		["<C-q>"] = { cmd = close, desc = "Close window" },
+		--#region Window navigation (fallback before vim-tmux-navigator loads via VeryLazy)
 		["<C-h>"] = { cmd = "<C-w>h", desc = "Window left" },
 		["<C-l>"] = { cmd = "<C-w>l", desc = "Window right" },
 		["<C-j>"] = { cmd = "<C-w>j", desc = "Window down" },
 		["<C-k>"] = { cmd = "<C-w>k", desc = "Window up" },
 		--#endregion
 
-		--#region Jump navigation
-		["<C-o>"] = { cmd = "<C-o>", desc = "Jump back" },
-		["<C-i>"] = { cmd = "<C-i>", desc = "Jump forward" },
-		["<A-Left>"] = { cmd = "<C-o>", desc = "Jump back" },
-		["<A-Right>"] = { cmd = "<C-i>", desc = "Jump forward" },
-		--#endregion
-
-		--#region Comment
-		["<leader>c"] = { cmd = ":lua require('Comment.api').toggle.linewise.current()<CR>", desc = "Toggle Comment" },
-		--#endregion
-
 		--#region Misc
-		["<A-f>"] = { cmd = ":HopWord<CR>", desc = "Fast file navigation" },
-		["<A-t>"] = { cmd = ":lua require('FTerm').toggle()<CR>", desc = "Toggle terminal" },
 		["<Esc>"] = { cmd = ":nohl<CR>", desc = "Clear search highlights" },
-		["<C-c>"] = { cmd = "<cmd> %y+ <CR>", desc = "Copy whole file" },
+		["<leader>Y"] = { cmd = "<cmd> %y+ <CR>", desc = "Yank entire file" },
+		["<leader>nd"] = { cmd = ":lua require('noice').cmd('dismiss')<CR>", desc = "Dismiss notifications" },
+		["<leader>nh"] = { cmd = ":Noice history<CR>", desc = "Notification history" },
 		--#endregion
 	},
 	insert_mode = {
-		["<C-b>"] = { cmd = "<ESC>^i", desc = "Beginning of line" },
-		["<C-e>"] = { cmd = "<End>", desc = "End of line" },
-
+		-- Move lines
 		["<A-j>"] = { cmd = "<Esc>:m .+1<CR>==gi", desc = "Move line down" },
 		["<A-k>"] = { cmd = "<Esc>:m .-2<CR>==gi", desc = "Move line up" },
-
-		["<C-h>"] = { cmd = "<Left>", desc = "Move left" },
-		["<C-l>"] = { cmd = "<Right>", desc = "Move right" },
-		["<C-j>"] = { cmd = "<Down>", desc = "Move down" },
-		["<C-k>"] = { cmd = "<Up>", desc = "Move up" },
-
-		["<C-s>"] = { cmd = "<Esc>:w<CR>a", desc = "Save file" },
 	},
 	terminal_mode = {
 		["<Esc>"] = { cmd = "<C-\\><C-n>", desc = "Exit terminal mode" },
@@ -475,13 +429,13 @@ local keymaps = {
 		["<leader>j"] = { cmd = ":join<CR>", desc = "Join selected lines" },
 
 		-- Format selection
-		["<leader>fm"] = { cmd = ":lua vim.lsp.buf.format()<CR>", desc = "Format selection" },
+		["<leader>lf"] = { cmd = ":lua vim.lsp.buf.format()<CR>", desc = "Format selection" },
 
 		-- Search for selected text
 		["<leader>fc"] = { cmd = '"zy:Telescope grep_string default_text=<C-r>z<CR>', desc = "Search selected text" },
 
-		-- Spectre search selection
-		["<leader>sw"] = { cmd = ":lua require('spectre').open_visual()<CR>", desc = "Search current selection" },
+		-- Grug-far search selection
+		["<leader>Sw"] = { cmd = ":lua require('grug-far').open({ prefills = { search = vim.fn.expand('<cword>') } })<CR>", desc = "Search current selection" },
 
 		-- Claude Code send selection
 		["<leader>as"] = { cmd = ":ClaudeCodeSend<CR>", desc = "Send to Claude" },
@@ -490,11 +444,7 @@ local keymaps = {
 		["s"] = { cmd = ":lua require('flash').jump()<CR>", desc = "Flash" },
 		["S"] = { cmd = ":lua require('flash').treesitter()<CR>", desc = "Flash Treesitter" },
 
-		-- Comment
-		["<leader>c"] = { cmd = "<Esc><Cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<CR>", desc = "Toggle Comment" },
-
 		-- Command palette in visual mode
-		["<C-P>"] = { cmd = "<Esc><Cmd>lua _G.visual_command_palette()<CR>", desc = "Command palette" },
 		["<leader>cp"] = { cmd = "<Esc><Cmd>lua _G.visual_command_palette()<CR>", desc = "Command palette" },
 	},
 	visual_block_mode = {
@@ -506,11 +456,7 @@ local keymaps = {
 		["s"] = { cmd = ":lua require('flash').jump()<CR>", desc = "Flash" },
 		["S"] = { cmd = ":lua require('flash').treesitter()<CR>", desc = "Flash Treesitter" },
 
-		-- Comment
-		["<leader>c"] = { cmd = "<Esc><Cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<CR>", desc = "Toggle Comment" },
-
 		-- Command palette in visual block mode
-		["<C-P>"] = { cmd = "<Esc><Cmd>lua _G.visual_command_palette()<CR>", desc = "Command palette" },
 		["<leader>cp"] = { cmd = "<Esc><Cmd>lua _G.visual_command_palette()<CR>", desc = "Command palette" },
 	},
 	command_mode = {
@@ -518,8 +464,6 @@ local keymaps = {
 		["<S-Tab>"] = { cmd = backward_search, desc = "Word Search Decrement" },
 	},
 }
-
-vim.g.mapleader = " "
 
 set_keymaps(keymaps.normal_mode, modes.normal_mode)
 set_keymaps(keymaps.insert_mode, modes.insert_mode)

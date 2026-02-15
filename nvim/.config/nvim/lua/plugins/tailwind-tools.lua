@@ -50,9 +50,9 @@ return {
 		},
 	},
 	keys = {
-		{ "<leader>Tc", "<cmd>TailwindConcealToggle<cr>", desc = "Toggle Tailwind Conceal" },
-		{ "<leader>Ti", "<cmd>TailwindColorToggle<cr>", desc = "Toggle Tailwind Colors" },
 		{ "<leader>Ts", "<cmd>TailwindSort<cr>", desc = "Sort Tailwind Classes" },
+		{ "<leader>Tc", "<cmd>TailwindColorToggle<cr>", desc = "Toggle Tailwind Colors" },
+		{ "<leader>Tx", "<cmd>TailwindConcealToggle<cr>", desc = "Toggle Tailwind Conceal" },
 		{ "<leader>Tu", "<cmd>Telescope tailwind utilities<cr>", desc = "Tailwind Utilities" },
 	},
 }
