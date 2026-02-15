@@ -104,6 +104,8 @@ eval "$(zoxide init zsh)"
 # ============================================
 # ⌨️ ALIASES
 # ============================================
+
+alias claude='CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --allow-dangerously-skip-permissions'
 ## Navigation
 alias cd='z'                    # Use zoxide instead of cd
 alias ..='cd ..'

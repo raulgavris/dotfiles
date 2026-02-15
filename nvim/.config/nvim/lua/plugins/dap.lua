@@ -2,6 +2,21 @@ return {
 	-- DAP (Debug Adapter Protocol)
 	{
 		"mfussenegger/nvim-dap",
+		keys = {
+			{ "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "Toggle breakpoint" },
+			{ "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, desc = "Conditional breakpoint" },
+			{ "<leader>dc", function() require("dap").continue() end, desc = "Start/Continue" },
+			{ "<leader>di", function() require("dap").step_into() end, desc = "Step into" },
+			{ "<leader>do", function() require("dap").step_over() end, desc = "Step over" },
+			{ "<leader>dO", function() require("dap").step_out() end, desc = "Step out" },
+			{ "<leader>dr", function() require("dap").repl.toggle() end, desc = "Toggle REPL" },
+			{ "<leader>dl", function() require("dap").run_last() end, desc = "Run last" },
+			{ "<leader>dt", function() require("dap").terminate() end, desc = "Terminate" },
+			{ "<leader>du", function() require("dapui").toggle() end, desc = "Toggle DAP UI" },
+			{ "<leader>dh", function() require("dap.ui.widgets").hover() end, desc = "Hover variables" },
+			{ "<leader>dp", function() require("dap").pause() end, desc = "Pause" },
+			{ "<leader>dR", function() require("dap").restart() end, desc = "Restart" },
+		},
 		dependencies = {
 			-- UI for debugger
 			{
@@ -84,7 +99,6 @@ return {
 
 			-- Configurations for JavaScript/TypeScript
 			local js_config = {
-				-- Attach to specific port (default 9229) - for ts-node --inspect
 				{
 					type = "pwa-node",
 					request = "attach",
@@ -98,7 +112,6 @@ return {
 					},
 					skipFiles = { "<node_internals>/**", "node_modules/**" },
 				},
-				-- Attach to running process
 				{
 					type = "pwa-node",
 					request = "attach",
@@ -108,7 +121,6 @@ return {
 					sourceMaps = true,
 					skipFiles = { "<node_internals>/**", "node_modules/**" },
 				},
-				-- Launch current file with ts-node
 				{
 					type = "pwa-node",
 					request = "launch",
@@ -120,7 +132,6 @@ return {
 					sourceMaps = true,
 					skipFiles = { "<node_internals>/**", "node_modules/**" },
 				},
-				-- Launch current file with node
 				{
 					type = "pwa-node",
 					request = "launch",
@@ -130,7 +141,6 @@ return {
 					sourceMaps = true,
 					skipFiles = { "<node_internals>/**", "node_modules/**" },
 				},
-				-- Debug Jest tests
 				{
 					type = "pwa-node",
 					request = "launch",
@@ -146,7 +156,6 @@ return {
 					internalConsoleOptions = "neverOpen",
 					skipFiles = { "<node_internals>/**", "node_modules/**" },
 				},
-				-- Debug current Jest test file
 				{
 					type = "pwa-node",
 					request = "launch",
@@ -171,7 +180,6 @@ return {
 			-- React/Browser debugging (Chrome)
 			local react_config = vim.deepcopy(js_config)
 
-			-- Add Chrome debugging configs for React
 			table.insert(react_config, {
 				type = "pwa-chrome",
 				request = "launch",
@@ -207,7 +215,6 @@ return {
 
 			-- C/C++ adapter (codelldb)
 			local codelldb_path = vim.fn.stdpath("data") .. "/mason/packages/codelldb/extension/adapter/codelldb"
-			local liblldb_path = vim.fn.stdpath("data") .. "/mason/packages/codelldb/extension/lldb/lib/liblldb.dylib"
 
 			dap.adapters.codelldb = {
 				type = "server",
@@ -297,7 +304,7 @@ return {
 				dapui.close()
 			end
 
-			-- Configure DAP signs using the new API (Neovim 0.11+)
+			-- Configure DAP signs
 			local dap_signs = {
 				DapBreakpoint = { text = "●", texthl = "DapBreakpoint" },
 				DapBreakpointCondition = { text = "●", texthl = "DapBreakpointCondition" },

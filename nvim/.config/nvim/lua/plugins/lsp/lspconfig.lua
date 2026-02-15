@@ -26,11 +26,26 @@ return {
 			},
 		})
 
+		-- Enable inlay hints globally (parameter names, inferred types)
+		vim.lsp.inlay_hint.enable(true)
+
+		-- Enable code lens globally
+		vim.lsp.codelens.refresh()
+		vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
+			callback = function()
+				pcall(vim.lsp.codelens.refresh)
+			end,
+		})
+
 		-- Global config for all LSP servers
 		vim.lsp.config("*", {
 			capabilities = cmp_nvim_lsp.default_capabilities(),
 			on_attach = function(client, bufnr)
 				require("illuminate").on_attach(client)
+				-- Signature help: show parameter info when typing function args (Ctrl+s in insert mode)
+				if client:supports_method("textDocument/signatureHelp") then
+					vim.keymap.set("i", "<C-s>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
+				end
 			end,
 		})
 
@@ -130,9 +145,9 @@ return {
 			"yamlls",
 			-- Lua (for Neovim config)
 			"lua_ls",
-			-- Docker (uncomment if needed)
-			-- "dockerls",
-			-- "docker_compose_language_service",
+			-- Docker
+			"dockerls",
+			"docker_compose_language_service",
 			-- GraphQL/Prisma (uncomment if needed)
 			-- "graphql",
 			-- "prismals",
