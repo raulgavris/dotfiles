@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
-# Memory usage for tmux status bar (macOS)
+# Memory usage for tmux status bar (macOS + Linux)
 
-# Get memory info
-memory_pressure=$(memory_pressure | grep "System-wide memory free percentage" | awk '{print $5}' | sed 's/%//')
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Get memory info
+    memory_pressure=$(memory_pressure | grep "System-wide memory free percentage" | awk '{print $5}' | sed 's/%//')
 
-# Calculate used percentage
-if [ -n "$memory_pressure" ]; then
-    mem_used=$((100 - memory_pressure))
+    # Calculate used percentage
+    if [ -n "$memory_pressure" ]; then
+        mem_used=$((100 - memory_pressure))
+    else
+        # Fallback method
+        mem_used=$(ps -A -o %mem | awk '{s+=$1} END {print int(s)}')
+    fi
 else
-    # Fallback method
-    mem_used=$(ps -A -o %mem | awk '{s+=$1} END {print int(s)}')
+    mem_used=$(free | awk '/Mem:/ {printf "%d", ($3/$2)*100}')
 fi
 
 # Color based on usage

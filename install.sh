@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ============================================
 # Dotfiles Installation Script
-# Author: Raul Gavris
+# Authors: Raul Gavris & Ice
+# Supports: macOS, Ubuntu/Debian
 # ============================================
 
 set -e  # Exit on error
@@ -21,73 +22,312 @@ print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
 print_header() { echo -e "\n${BLUE}═══════════════════════════════════════${NC}\n${BLUE}  $1${NC}\n${BLUE}═══════════════════════════════════════${NC}\n"; }
 
 # ============================================
-# Check if running on macOS
+# Detect OS
 # ============================================
-if [[ "$OSTYPE" != "darwin"* ]]; then
-    print_error "This script is designed for macOS only."
-    exit 1
-fi
-
-print_header "🚀 Dotfiles Installation"
-
-# ============================================
-# 1. Check for Xcode Command Line Tools
-# ============================================
-print_info "Checking for Xcode Command Line Tools..."
-if ! xcode-select -p &>/dev/null; then
-    print_warning "Xcode Command Line Tools not found. Installing..."
-    xcode-select --install
-    print_info "Please complete the installation and run this script again."
-    exit 0
-else
-    print_success "Xcode Command Line Tools installed"
-fi
-
-# ============================================
-# 2. Check for Homebrew
-# ============================================
-print_info "Checking for Homebrew..."
-if ! command -v brew &>/dev/null; then
-    print_warning "Homebrew not found. Installing..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
-    # Add Homebrew to PATH for Apple Silicon Macs
-    if [[ $(uname -m) == 'arm64' ]]; then
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-        eval "$(/opt/homebrew/bin/brew shellenv)"
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        OS="macos"
+    elif [[ "$OSTYPE" == "linux"* ]]; then
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            if [[ "$ID" == "ubuntu" || "$ID" == "debian" || "$ID_LIKE" == *"debian"* ]]; then
+                OS="linux"
+            else
+                print_error "Unsupported Linux distribution: $ID. Only Ubuntu/Debian are supported."
+                exit 1
+            fi
+        else
+            print_error "Cannot detect Linux distribution."
+            exit 1
+        fi
+    else
+        print_error "Unsupported OS: $OSTYPE"
+        exit 1
     fi
-    print_success "Homebrew installed"
-else
-    print_success "Homebrew already installed"
+}
+
+detect_os
+
+# Cross-platform in-place sed (macOS BSD sed requires -i '', GNU sed requires -i)
+sedi() {
+    if [[ "$OS" == "macos" ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
+print_header "🚀 Dotfiles Installation ($OS)"
+
+DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# ============================================
+# macOS: Xcode CLI Tools + Homebrew
+# ============================================
+if [ "$OS" = "macos" ]; then
+    print_info "Checking for Xcode Command Line Tools..."
+    if ! xcode-select -p &>/dev/null; then
+        print_warning "Xcode Command Line Tools not found. Installing..."
+        xcode-select --install
+        print_info "Please complete the installation and run this script again."
+        exit 0
+    else
+        print_success "Xcode Command Line Tools installed"
+    fi
+
+    print_info "Checking for Homebrew..."
+    if ! command -v brew &>/dev/null; then
+        print_warning "Homebrew not found. Installing..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Add Homebrew to PATH for Apple Silicon Macs
+        if [[ $(uname -m) == 'arm64' ]]; then
+            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
+        print_success "Homebrew installed"
+    else
+        print_success "Homebrew already installed"
+    fi
+
+    print_header "📦 Installing Homebrew Packages"
+
+    if [ -f "$DOTFILES_DIR/Brewfile" ]; then
+        print_info "Installing packages from Brewfile..."
+        brew bundle --file="$DOTFILES_DIR/Brewfile"
+        print_success "All Homebrew packages installed"
+    else
+        print_warning "Brewfile not found, skipping package installation"
+    fi
+
+    print_info "Checking for GNU Stow..."
+    if ! command -v stow &>/dev/null; then
+        print_warning "GNU Stow not found. Installing..."
+        brew install stow
+        print_success "GNU Stow installed"
+    else
+        print_success "GNU Stow already installed"
+    fi
+
+    # Oh My Posh
+    print_info "Installing Oh My Posh..."
+    if ! command -v oh-my-posh &>/dev/null; then
+        brew install jandedobbeleer/oh-my-posh/oh-my-posh
+        print_success "Oh My Posh installed"
+    else
+        print_success "Oh My Posh already installed"
+    fi
+
+    # Superfile (terminal file manager)
+    print_info "Installing superfile..."
+    if ! command -v spf &>/dev/null; then
+        brew install superfile
+        print_success "superfile installed"
+    else
+        print_success "superfile already installed"
+    fi
+
+    # Yazi (terminal file manager)
+    print_info "Installing yazi..."
+    if ! command -v yazi &>/dev/null; then
+        brew install yazi ffmpeg sevenzip jq poppler imagemagick
+        print_success "yazi installed"
+    else
+        print_success "yazi already installed"
+    fi
+
+    # Ghostty (terminal emulator)
+    print_info "Installing Ghostty..."
+    if ! brew list --cask ghostty &>/dev/null; then
+        brew install --cask ghostty
+        print_success "Ghostty installed"
+    else
+        print_success "Ghostty already installed"
+    fi
 fi
 
 # ============================================
-# 3. Install Homebrew packages
+# Linux: apt packages + tools from source/scripts
 # ============================================
-print_header "📦 Installing Homebrew Packages"
+if [ "$OS" = "linux" ]; then
+    print_header "📦 Installing Packages (apt)"
 
-if [ -f "Brewfile" ]; then
-    print_info "Installing packages from Brewfile..."
-    brew bundle --file=Brewfile
-    print_success "All Homebrew packages installed"
-else
-    print_warning "Brewfile not found, skipping package installation"
+    print_info "Updating package lists..."
+    sudo apt update
+
+    print_info "Installing CLI tools..."
+    sudo apt install -y \
+        cowsay \
+        fd-find \
+        fortune-mod \
+        fzf \
+        lolcat \
+        tig \
+        tmux \
+        stow \
+        ripgrep \
+        zsh \
+        curl \
+        git \
+        xclip \
+        build-essential \
+        ffmpeg \
+        7zip \
+        jq \
+        poppler-utils \
+        imagemagick
+
+    print_success "apt packages installed"
+
+    # Neovim (latest via PPA)
+    print_info "Installing Neovim..."
+    if ! command -v nvim &>/dev/null; then
+        sudo apt install -y software-properties-common
+        sudo add-apt-repository -y ppa:neovim-ppa/unstable
+        sudo apt update
+        sudo apt install -y neovim
+        print_success "Neovim installed"
+    else
+        print_success "Neovim already installed"
+    fi
+
+    # Go (latest stable from official tarball)
+    print_info "Installing Go..."
+    if ! command -v go &>/dev/null; then
+        GO_VERSION=$(curl -sL https://go.dev/VERSION?m=text | head -1)
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "x86_64" ]; then
+            GO_ARCH="amd64"
+        elif [ "$ARCH" = "aarch64" ]; then
+            GO_ARCH="arm64"
+        else
+            GO_ARCH="amd64"
+        fi
+        curl -sL "https://go.dev/dl/${GO_VERSION}.linux-${GO_ARCH}.tar.gz" -o /tmp/go.tar.gz
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+        rm /tmp/go.tar.gz
+        print_success "Go ${GO_VERSION} installed to /usr/local/go"
+    else
+        print_success "Go already installed ($(go version))"
+    fi
+
+    # Node.js via fnm (Fast Node Manager)
+    print_info "Installing fnm..."
+    if ! command -v fnm &>/dev/null && [ ! -d "$HOME/.local/share/fnm" ]; then
+        curl -fsSL https://fnm.vercel.app/install | bash
+        print_success "fnm installed"
+    else
+        print_success "fnm already installed"
+    fi
+
+    # Lazygit (latest from GitHub releases)
+    print_info "Installing lazygit..."
+    if ! command -v lazygit &>/dev/null; then
+        LAZYGIT_VERSION=$(curl -sL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "x86_64" ]; then
+            LG_ARCH="x86_64"
+        elif [ "$ARCH" = "aarch64" ]; then
+            LG_ARCH="arm64"
+        else
+            LG_ARCH="x86_64"
+        fi
+        curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_${LG_ARCH}.tar.gz" -o /tmp/lazygit.tar.gz
+        tar -xzf /tmp/lazygit.tar.gz -C /tmp lazygit
+        sudo install -m 755 /tmp/lazygit /usr/local/bin/lazygit
+        rm /tmp/lazygit.tar.gz /tmp/lazygit
+        print_success "lazygit ${LAZYGIT_VERSION} installed"
+    else
+        print_success "lazygit already installed"
+    fi
+
+    # pyenv
+    print_info "Installing pyenv..."
+    if ! command -v pyenv &>/dev/null && [ ! -d "$HOME/.pyenv" ]; then
+        sudo apt install -y \
+            libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
+            libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+            libffi-dev liblzma-dev
+        curl https://pyenv.run | bash
+        print_success "pyenv installed"
+    else
+        print_success "pyenv already installed"
+    fi
+
+    # zoxide
+    print_info "Installing zoxide..."
+    if ! command -v zoxide &>/dev/null && [ ! -d "$HOME/.local/bin/zoxide" ]; then
+        curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+        print_success "zoxide installed"
+    else
+        print_success "zoxide already installed"
+    fi
+
+    # Oh My Posh
+    print_info "Installing Oh My Posh..."
+    if ! command -v oh-my-posh &>/dev/null; then
+        curl -s https://ohmyposh.dev/install.sh | bash -s
+        print_success "Oh My Posh installed"
+    else
+        print_success "Oh My Posh already installed"
+    fi
+
+    # Superfile (terminal file manager)
+    print_info "Installing superfile..."
+    if ! command -v spf &>/dev/null; then
+        bash -c "$(curl -sLo- https://superfile.dev/install.sh)"
+        print_success "superfile installed"
+    else
+        print_success "superfile already installed"
+    fi
+
+    # Yazi (terminal file manager)
+    print_info "Installing yazi..."
+    if ! command -v yazi &>/dev/null; then
+        YAZI_VERSION=$(curl -sL https://api.github.com/repos/sxyazi/yazi/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "x86_64" ]; then
+            YAZI_ARCH="x86_64-unknown-linux-gnu"
+        elif [ "$ARCH" = "aarch64" ]; then
+            YAZI_ARCH="aarch64-unknown-linux-gnu"
+        else
+            print_error "Unsupported architecture for yazi: $ARCH"
+            YAZI_ARCH=""
+        fi
+        if [ -n "$YAZI_ARCH" ]; then
+            YAZI_URL="https://github.com/sxyazi/yazi/releases/download/${YAZI_VERSION}/yazi-${YAZI_ARCH}.zip"
+            YAZI_TMP=$(mktemp -d)
+            curl -sL "$YAZI_URL" -o "$YAZI_TMP/yazi.zip"
+            unzip -q "$YAZI_TMP/yazi.zip" -d "$YAZI_TMP"
+            sudo install -m 755 "$YAZI_TMP/yazi-${YAZI_ARCH}/yazi" /usr/local/bin/yazi
+            sudo install -m 755 "$YAZI_TMP/yazi-${YAZI_ARCH}/ya" /usr/local/bin/ya
+            rm -rf "$YAZI_TMP"
+            print_success "yazi ${YAZI_VERSION} installed"
+        fi
+    else
+        print_success "yazi already installed"
+    fi
+
+    # Ghostty (terminal emulator)
+    print_info "Installing Ghostty..."
+    if ! command -v ghostty &>/dev/null; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+        print_success "Ghostty installed"
+    else
+        print_success "Ghostty already installed"
+    fi
+
+    # GNOME keyboard settings (Super/Win keys act as Ctrl for macOS-style shortcuts)
+    if command -v gsettings &>/dev/null; then
+        print_info "Configuring GNOME keyboard settings (Super → Ctrl)..."
+        gsettings set org.gnome.desktop.input-sources xkb-options "['altwin:ctrl_win']"
+        print_success "Super/Win keys now act as Ctrl (macOS-style)"
+    fi
 fi
 
 # ============================================
-# 4. Check for GNU Stow
-# ============================================
-print_info "Checking for GNU Stow..."
-if ! command -v stow &>/dev/null; then
-    print_warning "GNU Stow not found. Installing..."
-    brew install stow
-    print_success "GNU Stow installed"
-else
-    print_success "GNU Stow already installed"
-fi
-
-# ============================================
-# 5. Backup existing configs
+# Backup existing configs
 # ============================================
 print_header "💾 Backing Up Existing Configs"
 
@@ -96,16 +336,22 @@ mkdir -p "$BACKUP_DIR"
 
 configs_to_backup=(
     "$HOME/.zshrc"
+    "$HOME/.zshrc.base"
     "$HOME/.gitconfig"
     "$HOME/.gitignore_global"
     "$HOME/.tmux.conf"
     "$HOME/.config/nvim"
-    "$HOME/.config/karabiner"
+    "$HOME/.config/ghostty"
+    "$HOME/.config/termdesk/config.toml"
 )
+
+if [ "$OS" = "macos" ]; then
+    configs_to_backup+=("$HOME/.config/karabiner")
+fi
 
 for config in "${configs_to_backup[@]}"; do
     if [ -e "$config" ]; then
-        print_info "Backing up $(basename $config)..."
+        print_info "Backing up $(basename "$config")..."
         cp -r "$config" "$BACKUP_DIR/"
     fi
 done
@@ -113,21 +359,26 @@ done
 print_success "Backups saved to: $BACKUP_DIR"
 
 # ============================================
-# 6. Stow dotfiles
+# Stow dotfiles
 # ============================================
 print_header "🔗 Symlinking Dotfiles"
 
-DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DOTFILES_DIR"
 
-# Array of packages to stow
+# Shared packages
 packages=(
     "zsh"
     "tmux"
     "git"
     "nvim"
-    "karabiner"
+    "ghostty"
+    "termdesk"
 )
+
+# OS-specific packages
+if [ "$OS" = "macos" ]; then
+    packages+=("karabiner")
+fi
 
 for package in "${packages[@]}"; do
     if [ -d "$package" ]; then
@@ -139,8 +390,23 @@ for package in "${packages[@]}"; do
     fi
 done
 
+# Install .zshrc as a regular file (not symlinked by stow)
+# This allows p10k configure and other tools to modify ~/.zshrc
+# without polluting the git repo. The real config lives in .zshrc.base.
+if [ -L "$HOME/.zshrc" ]; then
+    # Migration: replace stow symlink with a copy
+    rm "$HOME/.zshrc"
+    cp "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
+    print_success ".zshrc migrated from symlink to regular file"
+elif [ ! -f "$HOME/.zshrc" ]; then
+    cp "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
+    print_success ".zshrc installed"
+else
+    print_success ".zshrc already exists (not overwriting)"
+fi
+
 # ============================================
-# 7. Install Tmux Plugin Manager
+# Install Tmux Plugin Manager
 # ============================================
 print_header "🔌 Installing Tmux Plugin Manager"
 
@@ -160,7 +426,7 @@ if [ -d "$HOME/.tmux" ]; then
 fi
 
 # ============================================
-# 8. Install Oh My Zsh
+# Install Oh My Zsh
 # ============================================
 print_header "🎨 Installing Oh My Zsh"
 
@@ -173,7 +439,7 @@ else
 fi
 
 # ============================================
-# 9. Install Zsh plugins
+# Install Zsh plugins
 # ============================================
 print_info "Installing Zsh plugins..."
 
@@ -189,14 +455,8 @@ if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlightin
     print_success "zsh-syntax-highlighting installed"
 fi
 
-# Powerlevel10k theme
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-    print_success "Powerlevel10k theme installed"
-fi
-
 # ============================================
-# 10. Configure Git
+# Configure Git
 # ============================================
 print_header "🔧 Configuring Git"
 
@@ -207,11 +467,209 @@ else
     print_warning "Git config not symlinked properly"
 fi
 
-# Set up global gitignore
-git config --global core.excludesfile ~/.gitignore_global 2>/dev/null && print_success "Global gitignore configured" || true
+# Prompt for git user identity — writes to ~/.gitconfig.local (not the symlinked .gitconfig)
+GIT_LOCAL="$HOME/.gitconfig.local"
+if [ -f "$GIT_LOCAL" ] && grep -q "\[user\]" "$GIT_LOCAL" 2>/dev/null; then
+    local_name=$(git config --file "$GIT_LOCAL" user.name 2>/dev/null)
+    local_email=$(git config --file "$GIT_LOCAL" user.email 2>/dev/null)
+    print_success "Git identity already configured: $local_name <$local_email>"
+else
+    print_info "Git user identity not configured. Let's set it up."
+
+    # Prompt for name
+    while true; do
+        read -rp "$(echo -e "${BLUE}ℹ${NC}") Enter your full name for git commits: " git_name
+        if [[ -z "$git_name" ]]; then
+            print_error "Name cannot be empty."
+        elif [[ ${#git_name} -lt 2 ]]; then
+            print_error "Name must be at least 2 characters."
+        else
+            break
+        fi
+    done
+
+    # Prompt for email
+    while true; do
+        read -rp "$(echo -e "${BLUE}ℹ${NC}") Enter your email for git commits: " git_email
+        if [[ -z "$git_email" ]]; then
+            print_error "Email cannot be empty."
+        elif [[ ! "$git_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            print_error "Invalid email format."
+        else
+            break
+        fi
+    done
+
+    git config --file "$GIT_LOCAL" user.name "$git_name"
+    git config --file "$GIT_LOCAL" user.email "$git_email"
+    print_success "Git identity saved to ~/.gitconfig.local: $git_name <$git_email>"
+fi
 
 # ============================================
-# 11. Create necessary directories
+# Tmux status bar position
+# ============================================
+print_header "🔧 Configuring Tmux"
+
+print_info "Where do you want the tmux status bar?"
+echo "  1) top (default)"
+echo "  2) bottom"
+while true; do
+    read -rp "$(echo -e "${BLUE}ℹ${NC}") Choose [1/2] (default: 1): " tmux_pos
+    tmux_pos="${tmux_pos:-1}"
+    if [[ "$tmux_pos" == "1" ]]; then
+        sedi "s/set -g status-position .*/set -g status-position top/" "$DOTFILES_DIR/tmux/.tmux.conf"
+        print_success "Tmux status bar set to top"
+        break
+    elif [[ "$tmux_pos" == "2" ]]; then
+        sedi "s/set -g status-position .*/set -g status-position bottom/" "$DOTFILES_DIR/tmux/.tmux.conf"
+        print_success "Tmux status bar set to bottom"
+        break
+    else
+        print_error "Please enter 1 or 2."
+    fi
+done
+
+# ============================================
+# Prompt engine
+# ============================================
+print_header "🎨 Configuring Shell Prompt"
+
+print_info "Which prompt engine would you like?"
+echo "  1) Oh My Posh — 124+ themes with live preview, cross-platform (Recommended)"
+echo "  2) Powerlevel10k — classic zsh prompt, configure with 'p10k configure'"
+while true; do
+    read -rp "$(echo -e "${BLUE}ℹ${NC}") Choose [1/2] (default: 1): " prompt_choice
+    prompt_choice="${prompt_choice:-1}"
+    if [[ "$prompt_choice" == "1" || "$prompt_choice" == "2" ]]; then
+        break
+    else
+        print_error "Please enter 1 or 2."
+    fi
+done
+
+if [[ "$prompt_choice" == "1" ]]; then
+    # --- Oh My Posh ---
+    # Find themes directory
+    POSH_THEMES=""
+    for dir in \
+        "${HOME}/.cache/oh-my-posh/themes" \
+        "/usr/local/share/oh-my-posh/themes" \
+        "$(brew --prefix oh-my-posh 2>/dev/null)/themes"; do
+        if [ -d "$dir" ]; then
+            POSH_THEMES="$dir"
+            break
+        fi
+    done
+
+    if [ -d "$POSH_THEMES" ] && command -v fzf &>/dev/null; then
+        print_info "Select a theme (↑↓ to navigate, Tab to filter, Enter to select):"
+
+        # Build theme lists for Tab filtering
+        _tmp_dir=$(mktemp -d)
+        _tmp_all="$_tmp_dir/all"
+        _tmp_single="$_tmp_dir/single"
+        _tmp_multi="$_tmp_dir/multi"
+
+        ls "$POSH_THEMES"/*.omp.* 2>/dev/null | \
+            xargs -I{} basename {} | \
+            sed -E 's/\.omp\.(json|yaml|toml)$//' | \
+            sort -u > "$_tmp_all"
+
+        > "$_tmp_single"
+        > "$_tmp_multi"
+        while IFS= read -r _theme; do
+            _tf=""
+            for ext in json yaml toml; do
+                if [ -f "$POSH_THEMES/$_theme.omp.$ext" ]; then
+                    _tf="$POSH_THEMES/$_theme.omp.$ext"
+                    break
+                fi
+            done
+            if [ -n "$_tf" ] && grep -qE '"newline"|type: newline|type = "newline"' "$_tf" 2>/dev/null; then
+                echo "$_theme" >> "$_tmp_multi"
+            else
+                echo "$_theme" >> "$_tmp_single"
+            fi
+        done < "$_tmp_all"
+
+        # Helper script for Tab cycling (works with all fzf versions)
+        cat > "$_tmp_dir/cycle.sh" << 'CYCLE'
+#!/usr/bin/env bash
+dir="$1"
+state=$(cat "$dir/state" 2>/dev/null || echo "all")
+case "$state" in
+    all)
+        echo "single" > "$dir/state"
+        echo "── Filter: Single line ──"
+        cat "$dir/single"
+        ;;
+    single)
+        echo "multi" > "$dir/state"
+        echo "── Filter: Multi line ──"
+        cat "$dir/multi"
+        ;;
+    *)
+        echo "all" > "$dir/state"
+        echo "── Filter: All themes ──"
+        cat "$dir/all"
+        ;;
+esac
+CYCLE
+        chmod +x "$_tmp_dir/cycle.sh"
+        echo "all" > "$_tmp_dir/state"
+
+        omp_theme=$({ echo "── Filter: All themes ──"; cat "$_tmp_all"; } | \
+            fzf \
+                --height=80% \
+                --layout=reverse \
+                --border=rounded \
+                --ansi \
+                --header="Tab: filter | ↑↓ Navigate | Enter Select | Esc Cancel" \
+                --header-lines=1 \
+                --prompt="Theme > " \
+                --preview="oh-my-posh print primary --config '${POSH_THEMES}/{}.omp.json' --shell plain 2>/dev/null || oh-my-posh print primary --config '${POSH_THEMES}/{}.omp.yaml' --shell plain 2>/dev/null || oh-my-posh print primary --config '${POSH_THEMES}/{}.omp.toml' --shell plain 2>/dev/null || echo 'Preview not available'" \
+                --preview-window=down:3:wrap \
+                --bind "tab:reload($_tmp_dir/cycle.sh $_tmp_dir)" \
+            || true)
+
+        rm -rf "$_tmp_dir"
+
+        if [ -n "$omp_theme" ]; then
+            for ext in json yaml toml; do
+                if [ -f "$POSH_THEMES/$omp_theme.omp.$ext" ]; then
+                    cp "$POSH_THEMES/$omp_theme.omp.$ext" "$HOME/.ohmyposh.omp.json"
+                    break
+                fi
+            done
+            print_success "Oh My Posh theme set to: $omp_theme"
+        else
+            # No theme selected — create empty sentinel so Oh My Posh loads with defaults
+            echo '{}' > "$HOME/.ohmyposh.omp.json"
+            print_warning "No theme selected, Oh My Posh will use its default prompt"
+        fi
+    else
+        # No fzf or themes dir — create empty sentinel so Oh My Posh loads with defaults
+        echo '{}' > "$HOME/.ohmyposh.omp.json"
+        print_warning "Themes directory or fzf not found. Oh My Posh will use its default prompt."
+    fi
+
+else
+    # --- Powerlevel10k ---
+    # Remove Oh My Posh config so .zshrc.base picks p10k
+    rm -f "$HOME/.ohmyposh.omp.json"
+
+    # Install Powerlevel10k
+    if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+        print_success "Powerlevel10k installed"
+    else
+        print_success "Powerlevel10k already installed"
+    fi
+    print_info "Run 'p10k configure' after restart to set up your prompt"
+fi
+
+# ============================================
+# Create necessary directories
 # ============================================
 print_header "📁 Creating Directories"
 
@@ -229,11 +687,11 @@ for dir in "${directories[@]}"; do
 done
 
 # ============================================
-# 12. Set Zsh as default shell
+# Set Zsh as default shell
 # ============================================
 print_header "🐚 Setting Zsh as Default Shell"
 
-if [ "$SHELL" != "$(which zsh)" ]; then
+if [[ "$(basename "$SHELL")" != "zsh" ]]; then
     print_info "Changing default shell to Zsh..."
     chsh -s "$(which zsh)"
     print_success "Default shell changed to Zsh"
@@ -242,18 +700,25 @@ else
 fi
 
 # ============================================
-# 13. Final steps
+# Final steps
 # ============================================
 print_header "✨ Installation Complete!"
 
 echo ""
 print_info "Next steps:"
-echo "  1. Restart your terminal"
-echo "  2. Run 'p10k configure' to set up Powerlevel10k"
-echo "  3. Open tmux and press 'Ctrl-a + I' to install tmux plugins"
-echo "  4. Press 'Ctrl-a + H' in tmux to view the Tmux guide"
+if [[ "$prompt_choice" == "1" ]]; then
+    echo "  1. Run 'omp-theme' to change Oh My Posh theme anytime"
+else
+    echo "  1. Run 'p10k configure' to set up Powerlevel10k prompt"
+fi
+echo "  2. Open tmux and press 'Ctrl-a + I' to install tmux plugins"
+echo "  3. Press 'Ctrl-a + H' in tmux to view the Tmux guide"
+echo "  4. Open 'nvim' — first launch auto-installs plugins (~30s)"
+echo "  5. Press F10 or Space M in nvim for the VS Code-style menu bar"
 echo ""
 print_success "Your dotfiles are ready! 🎉"
 echo ""
 print_info "Backup location: $BACKUP_DIR"
 echo ""
+print_info "Reloading shell..."
+exec zsh

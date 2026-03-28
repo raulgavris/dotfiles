@@ -1,447 +1,334 @@
-# 🚀 Neovim Configuration
+# Neovim Configuration
 
-Modern, blazingly fast Neovim configuration with LSP, Treesitter, and tons of productivity features.
+LazyVim-based Neovim setup for developers transitioning from VS Code/WebStorm. Primary languages: TypeScript, Node.js, Go. Formatter: Biome.
 
-## ✨ Features
+## Layout
 
-### 🎨 **UI & Appearance**
-- **Theme**: OneDark (with Gruvbox available)
-- **Statusline**: Lualine with git integration
-- **Bufferline**: Beautiful buffer/tab line
-- **Dashboard**: Custom start screen
-- **Noice**: Modern UI for messages, cmdline, and popups
-- **Dressing**: Better vim.ui.select and vim.ui.input
-- **Fidget**: LSP progress indicator
-- **Icons**: Nerd Font icons everywhere
+VS Code-style layout managed by [edgy.nvim](https://github.com/folke/edgy.nvim):
 
-### ⚡ **Navigation**
-- **Flash**: Lightning-fast navigation (replaces Hop)
-  - `s` - Jump to any word
-  - `S` - Treesitter selection
-- **Telescope**: Fuzzy finder with FZF native for speed
-  - `<leader>ff` - Find files
-  - `<leader>fg` - Live grep
-  - `<leader>fb` - Buffers
-  - `<leader>fr` - Recent files
-- **Harpoon**: Quick file bookmarking
-  - `<leader>hm` - Mark file
-  - `<leader>hn/hp` - Next/Previous mark
-- **Neo-tree**: Modern file explorer with git integration (`Ctrl-e`)
-- **Breadcrumbs**: Visual file path and symbol location (top of window)
-- **Aerial**: Symbol outline sidebar (`<leader>o`)
-- **Satellite**: Code minimap on the right with diagnostics/git/search indicators
+```
+┌──────────┬───────────────────────┬──────────┐
+│ Files |  │  Editor (buffer tabs) │  Claude  │
+│ Git |    │                       │  Code    │
+│ Debug    ├───────────────────────┤          │
+│          │  Terminal / Console   │          │
+└──────────┴───────────────────────┴──────────┘
+     ↑ Menu Bar always visible at the very top ↑
+```
 
-### 🔍 **Search & Replace**
-- **Spectre**: Project-wide search and replace with preview
-  - `<leader>S` - Toggle Spectre
-  - `<leader>sw` - Search current word
-  - `<leader>sp` - Search in current file
-- **Telescope grep**: Blazing fast with ripgrep
-- **Flash search**: Enhanced search with labels
-- **Which-key**: Shows available keybindings
+- **Left sidebar**: Tabbed panel with **Files | Git | Debug** tabs (width 35)
+  - **Files**: Neo-tree file explorer (default)
+  - **Git**: Source Control panel — staged/unstaged/untracked sections with inline diff
+  - **Debug**: DAP UI panels (appears when debugger is active)
+- **Bottom panel**: Terminals, QuickFix, Diagnostics, Debug REPL/Console
+- **Right sidebar**: Claude Code (width 80), Symbols Outline
+- **Editor area**: Buffer tabs in the winbar, one tab per open file
+- All panels have **x close buttons** — click to dismiss
 
-### 💻 **LSP & Completion**
-- **Mason**: LSP/DAP/Linter manager
-- **LSP Config**: Pre-configured language servers
-- **LSP Saga**: Better LSP UI
-- **Null-ls**: Formatters and linters
-- **Nvim-cmp**: Autocompletion
-- **Windsurf (Codeium)**: FREE AI-powered inline code suggestions (like Copilot!)
-- **LuaSnip**: Snippet engine
-- **Treesitter**: Better syntax highlighting
+## Features
 
-### 🐛 **Debugging (DAP)**
-- **nvim-dap**: Debug Adapter Protocol
-- **nvim-dap-ui**: Beautiful debugger UI
-- **nvim-dap-virtual-text**: Inline variable values
-- **Mason-DAP**: Auto-install debuggers
-  - `<leader>db` - Toggle breakpoint
-  - `<leader>dc` - Start/Continue
-  - `<leader>di/o/O` - Step into/over/out
-  - `<leader>du` - Toggle debug UI
-- **Supported**: JavaScript, TypeScript, Python, and more
+### Menu Bar
+A permanent VS Code-style menu bar at the top of the screen with clickable categories:
 
-### 📝 **Editing**
-- **Mini.nvim suite**:
-  - **mini.ai**: Better text objects
-  - **mini.surround**: Add/delete/change surroundings
-  - **mini.pairs**: Auto-close brackets
-  - **mini.bufremove**: Better buffer deletion
-  - **mini.indentscope**: Indent guides
-  - **mini.animate**: Smooth cursor movements
-- **Comment**: Smart commenting
-- **Autopairs**: Auto-close brackets (enhanced)
-- **Multicursor**: Multiple cursors support
-- **Todo-comments**: Highlight TODO, FIXME, etc.
+**File | Edit | View | Search | Code | Debug | Git | Terminal**
 
-### 🔧 **Git Integration**
-- **Gitsigns**: Git decorations in sign column
-- **Gitblame**: Inline git blame
-- **LazyGit**: Git UI in Neovim
-- **Diffview**: Beautiful git diffs
-  - `<leader>gdo` - Open diffview
-  - `<leader>gdh` - File history
-- **Telescope git**: Browse commits, branches, status
+- Always visible in the tabline (topmost position)
+- Click a category or press **F10** to open its dropdown
+- Dropdowns show actions with their keyboard shortcuts
+- Navigate: `h`/`l` between categories, `j`/`k` within items, `Enter` to execute, `Esc` to close
+- Mouse: click items directly
 
-### 🐛 **Diagnostics**
-- **Trouble**: Beautiful diagnostics list
-  - `<leader>xx` - Toggle diagnostics
-  - `<leader>xX` - Buffer diagnostics
-- **Todo-comments integration**: Find all TODOs
-  - `]t` / `[t` - Next/prev TODO
+### Command Palette (Ctrl+P)
+Custom implementation with categorized actions and recent-command history:
+- **Normal mode**: Full action list — files, code, git, debug, test, AI, editor
+- **Visual mode**: Selection-aware actions — comment, format, sort, send to Claude
 
-### 🎯 **Special Features**
-- **Session Management**: Restore your workspace instantly
-  - `<leader>qs` - Restore session (for current directory)
-  - `<leader>ql` - Restore last session
-  - `<leader>qd` - Don't save current session
-- **Floating terminal**: Toggle with `Alt-t`
-- **Code runner**: Run code with `F5`
-- **UFO**: Better folding
-- **Colorizer**: Highlight color codes
-- **Rainbow**: Rainbow parentheses
-- **Remote**: SSH and Docker editing
-- **Legendary**: Command palette (`Ctrl-p`)
-- **Claude Code**: AI pair programming (`<leader>ac`)
+Recently used commands float to the top (marked with `>>`).
 
-## ⌨️ Key Bindings
+### Terminal Management
+Custom terminal system independent of Snacks.terminal:
+- **Toggle**: `` Ctrl+` `` opens/hides the bottom terminal split
+- **Exit terminal mode**: `Ctrl+]` switches to normal mode (Tab in terminal passes through to shell for autocomplete)
+- **Tabs**: Each terminal gets a tab in the terminal winbar with a close button
+- **New tab**: Click the `+` button in the terminal tab bar
+- **Switch tabs**: Click terminal tabs to switch between them
+- Terminals are routed to the bottom panel by edgy.nvim (not floating)
 
-### Leader Key
-**Space** (`<Space>`) is the leader key
+### Right-Click Context Menu
+Full context menu with aligned keyboard shortcuts:
 
-### Essential Mappings
+| Section | Actions |
+|---------|---------|
+| **Navigation** | Go to Definition (F12), References (S-F12), Type (gt) |
+| **Code** | Hover Docs (K), Code Actions (Space+ca), Rename (F2), Format (Space+cf) |
+| **Git (per-line)** | Preview Hunk, Stage Hunk, Reset Hunk, Blame Line |
+| **Edit** | Toggle Comment (Ctrl-/), Cut (Ctrl-X), Copy (Ctrl-C), Paste (Ctrl-V) |
 
-#### File Navigation
-| Key | Action |
-|-----|--------|
-| `<C-e>` | Toggle Neo-tree (file explorer) |
-| `<leader>e` | Focus Neo-tree |
-| `<leader>ge` | Git status in Neo-tree |
-| `<leader>o` | Toggle Outline (Aerial - symbol list) |
-| `<leader>ff` | Find files |
-| `<leader>fg` | Live grep |
-| `<leader>fb` | Find buffers |
-| `<leader>fr` | Recent files |
-| `<C-p>` | Command palette (Legendary) |
+### UI & Appearance
+- **Theme**: OneDark "darker" (matches tmux theme)
+- **Statusline**: Lualine (onedark theme)
+- **Buffer tabs**: Custom winbar — editor gets file tabs, terminals get terminal tabs
+- **Panel titles**: Sidebar/panel windows show their name + close button
+- **Dashboard**: mini.starter with project picker
+- **Noice**: Modern UI for messages and cmdline (bottom bar style)
 
-#### Flash Navigation (Super Fast!)
-| Key | Mode | Action |
-|-----|------|--------|
-| `s` | Normal/Visual | Jump to any word |
-| `S` | Normal/Visual | Treesitter selection |
-| `r` | Operator | Remote flash |
+### Git Integration
+- **Source Control panel**: VS Code-style sidebar tab (`<leader>gS`) with merge conflicts/staged/unstaged/untracked sections
+  - Nerd Font icon toolbar at the top with branch name and ahead/behind counts
+  - Action buttons (Enter or shortcut key):
+    - `c` Commit, `g` AI Commit, `C` Commit All, `a` Amend
+    - `p` Push, `P` Pull, `f` Fetch
+    - `z` Stash, `Z` Stash Pop
+    - `m` AI Merge (select branch, auto-resolve conflicts with Claude)
+  - **Git Graph**: Visual commit history with branch topology below the file sections
+    - Shows last 30 commits with graph lines, hashes, decorations, and messages
+    - `Enter` on a commit shows full diff (`git show`) in the editor
+    - Color-coded: graph lines, commit hashes, branch decorations
+  - File actions:
+    - `Enter` open file with inline diff (via Gitsigns diffthis)
+    - `D` side-by-side diff (staged: HEAD vs index, unstaged: index vs working tree, conflicts: ours vs theirs)
+    - `o` open file without diff
+    - `s` / `S` stage file / stage all
+    - `u` / `U` unstage file / unstage all
+    - `d` discard changes (with confirmation)
+    - `i` / `e` accept incoming (theirs) / accept current (ours) — merge conflicts only
+    - `r` refresh, `q` close panel
+  - AI Commit detects merge/squash context and uses git's prepared message instead of generating
+  - Auto-refreshes on file save, terminal exit, focus, and `.git` filesystem changes
+- **Gitsigns**: Gutter signs for changes, hunk navigation (`]h`/`[h`), stage/reset/preview per hunk
+- **LazyGit**: Full TUI git client (`<leader>gg`)
+- **codediff.nvim**: VS Code-style side-by-side diff with character-level highlighting (`<leader>gD`)
+- **Snacks git**: Blame line, git status/log/diff pickers
 
-#### LSP
-| Key | Action |
-|-----|--------|
-| `K` | Hover documentation |
-| `gd` | Go to definition |
-| `gR` | Show references |
-| `gi` | Go to implementation |
-| `gt` | Go to type definition |
-| `<leader>ca` | Code actions |
-| `<leader>rs` | Restart LSP |
-| `]d` / `[d` | Next/prev diagnostic |
-| `<leader>d` | Show line diagnostics |
-
-#### Git
-| Key | Action |
-|-----|--------|
-| `<leader>gs` | Git status |
-| `<leader>gc` | Git commits |
-| `<leader>gb` | Git branches |
-| `<leader>gdo` | Open diffview |
-| `<leader>gdc` | Close diffview |
-| `<leader>gdh` | File history |
-
-#### Trouble (Diagnostics)
-| Key | Action |
-|-----|--------|
-| `<leader>xx` | Toggle diagnostics |
-| `<leader>xX` | Buffer diagnostics |
-| `<leader>cs` | Symbols |
-| `<leader>cl` | LSP definitions |
-
-#### Harpoon
-| Key | Action |
-|-----|--------|
-| `<leader>hm` | Mark file |
-| `<leader>hn` | Next mark |
-| `<leader>hp` | Previous mark |
-| `<leader>hf` | Show marks |
-
-#### Splits & Tabs
-| Key | Action |
-|-----|--------|
-| `<leader>sv` | Split vertically |
-| `<leader>sh` | Split horizontally |
-| `<leader>se` | Equal splits |
-| `<leader>sq` | Close split |
-| `<leader>to` | New tab |
-| `<leader>tx` | Close tab |
-| `<C-h/j/k/l>` | Navigate windows |
-
-#### Editing
-| Key | Action |
-|-----|--------|
-| `<C-s>` | Save file |
-| `<C-c>` | Copy whole file |
-| `<C-q>` | Close window |
-| `<Esc>` | Clear search highlights |
-| `Alt-f` | Fast word navigation |
-| `Alt-t` | Toggle terminal |
-| `<C-w>j/k` | Move line up/down |
-| `<Tab>` / `<S-Tab>` | Indent in visual mode |
-
-#### TODO Comments
-| Key | Action |
-|-----|--------|
-| `]t` / `[t` | Next/prev TODO |
-| `<leader>xt` | TODOs in Trouble |
-| `<leader>st` | Search TODOs |
-
-#### Search & Replace (Spectre)
-| Key | Mode | Action |
-|-----|------|--------|
-| `<leader>S` | Normal | Toggle Spectre |
-| `<leader>sw` | Normal | Search current word |
-| `<leader>sw` | Visual | Search selection |
-| `<leader>sp` | Normal | Search in current file |
-| `<leader>R` | Inside Spectre | Replace all |
-| `<leader>rc` | Inside Spectre | Replace current line |
-| `dd` | Inside Spectre | Toggle line |
-
-#### Debugging (DAP)
-| Key | Action |
-|-----|--------|
-| `<leader>db` | Toggle breakpoint |
-| `<leader>dB` | Conditional breakpoint |
-| `<leader>dc` | Start/Continue debugging |
-| `<leader>di` | Step into |
-| `<leader>do` | Step over |
-| `<leader>dO` | Step out |
-| `<leader>dt` | Terminate debugging |
-| `<leader>du` | Toggle debug UI |
-| `<leader>dr` | Toggle REPL |
-| `<leader>dh` | Hover variables |
-| `<leader>dl` | Run last debug config |
-
-#### Session Management
-| Key | Action |
-|-----|--------|
-| `<leader>qs` | Restore session for current dir |
-| `<leader>ql` | Restore last session |
-| `<leader>qd` | Don't save current session |
-
-#### Claude Code (AI)
-| Key | Mode | Action |
-|-----|------|--------|
-| `<leader>ac` | Normal | Toggle Claude |
-| `<leader>af` | Normal | Focus Claude |
-| `<leader>ar` | Normal | Resume Claude |
-| `<leader>aC` | Normal | Continue Claude |
-| `<leader>am` | Normal | Select model |
-| `<leader>ab` | Normal | Add current buffer |
-| `<leader>as` | Visual | Send to Claude |
-| `<leader>aa` | Normal | Accept diff |
-| `<leader>ad` | Normal | Deny diff |
-
-### Code Runner
-Press `F5` to run code in supported languages:
-- Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, PHP, Ruby, etc.
-
-## 📦 Plugin List
-
-<details>
-<summary>Click to expand full plugin list</summary>
-
-### Core
-- `lazy.nvim` - Plugin manager
-- `plenary.nvim` - Lua utility functions
-
-### UI
-- `onedark.nvim` / `gruvbox.nvim` - Themes
-- `lualine.nvim` - Statusline
-- `bufferline.nvim` - Bufferline
-- `nvim-web-devicons` - Icons
-- `dashboard.nvim` - Start screen
-- `noice.nvim` - Modern UI
-- `dressing.nvim` - Better UI elements
-- `fidget.nvim` - LSP progress
-- `nvim-notify` - Notifications
+### Claude Code Integration
+Claude Code runs in its own right sidebar panel (separate from terminals):
+- `<leader>ac` Toggle Claude
+- `<leader>af` Focus Claude
+- `<leader>ar` Resume conversation
+- `<leader>aC` Continue conversation
+- `<leader>as` Send selection (visual mode)
+- `<leader>ab` Add current buffer to Claude
+- `<leader>am` Select Claude model
+- `<leader>aa` / `<leader>ad` Accept / Deny diff
 
 ### Navigation
-- `flash.nvim` - Fast navigation
-- `telescope.nvim` + extensions - Fuzzy finder
-- `telescope-fzf-native.nvim` - Native FZF sorter
-- `neo-tree.nvim` - Modern file explorer with git integration
-- `harpoon` - File bookmarks
-- `nvim-navic` + `barbecue.nvim` - Breadcrumbs (file path + symbols)
-- `aerial.nvim` - Symbol outline sidebar
-- `satellite.nvim` - Code minimap with diagnostics/git indicators
+- **Flash**: Lightning-fast jump (`s` to search, `S` treesitter select)
+- **Snacks picker**: Fuzzy finder for files, grep, symbols, git
+- **Neo-tree**: File explorer sidebar (`Ctrl+B`)
+- **vim-tmux-navigator**: Seamless `Ctrl+h/j/k/l` between nvim splits and tmux panes
+- **Tab/Shift+Tab**: Cycle between layout areas (editor, sidebar, terminal)
+- **H/L** or **[b/]b**: Navigate between open buffers
 
-### LSP & Completion
-- `mason.nvim` - LSP installer
-- `mason-lspconfig.nvim` - Mason + LSPconfig
-- `nvim-lspconfig` - LSP configurations
-- `lspsaga.nvim` - Better LSP UI
-- `null-ls.nvim` - Formatters & linters
-- `nvim-cmp` - Completion engine
-- `windsurf.nvim` - FREE AI inline code suggestions (Codeium)
-- `LuaSnip` - Snippet engine
-- `cmp-nvim-lsp` - LSP completion source
-- `cmp-buffer` - Buffer completion
-- `cmp-path` - Path completion
-- `cmp_luasnip` - Snippet completion
+### Debugging (DAP)
+Full debug adapter protocol support with auto-installing debuggers:
+- **JS/TS**: pwa-node (attach, launch, ts-node), pwa-chrome (React/browser)
+- **Jest**: Debug individual test files or full suite
+- **DAP UI**: Auto-opens in the **Debug** sidebar tab on debug start (scopes, breakpoints, stacks, watches, REPL, console)
+- **Virtual text**: Shows variable values inline while debugging
+- Breakpoint signs with custom colors (red dot, yellow conditional, green stopped arrow)
+- Sidebar auto-switches between Files and Debug tabs on debug start/stop
 
-### Treesitter
-- `nvim-treesitter` - Better syntax highlighting
-- `nvim-treesitter-textobjects` - Text objects
-- `rainbow-delimiters.nvim` - Rainbow parentheses
-
-### Editing
-- `mini.nvim` - Swiss army knife
-  - `mini.ai` - Better text objects
-  - `mini.surround` - Surroundings
-  - `mini.pairs` - Auto-pairs
-  - `mini.bufremove` - Buffer removal
-  - `mini.indentscope` - Indent guides
-  - `mini.animate` - Animations
-- `Comment.nvim` - Commenting
-- `nvim-autopairs` - Auto-close brackets
-- `vim-visual-multi` - Multiple cursors
-
-### Git
-- `gitsigns.nvim` - Git decorations
-- `git-blame.nvim` - Inline blame
-- `lazygit.nvim` - LazyGit integration
-- `diffview.nvim` - Git diffs
-
-### Diagnostics & Debugging
-- `trouble.nvim` - Diagnostics UI
-- `todo-comments.nvim` - TODO highlighting
-- `nvim-dap` - Debug Adapter Protocol
-- `nvim-dap-ui` - Debug UI
-- `nvim-dap-virtual-text` - Inline debug info
-- `mason-nvim-dap` - Auto-install debuggers
+### Testing (Neotest)
+Test runner framework with adapters for Jest and Vitest:
+- `<leader>tn` Run nearest test
+- `<leader>tf` Run file tests
+- `<leader>ta` Run all tests
+- `<leader>td` Debug nearest test (via DAP)
+- `<leader>ts` Toggle test summary
+- `<leader>tw` Toggle watch mode
 
 ### Search & Replace
-- `nvim-spectre` - Project-wide search and replace
+- **grug-far**: Project-wide search and replace using ripgrep for both search and replace (`<leader>sR`)
+- **Snacks picker grep**: Quick search across files (`F4`, `<leader>sg`)
 
-### Utilities
-- `which-key.nvim` - Key binding hints
-- `legendary.nvim` - Command palette
-- `nvim-colorizer.lua` - Color highlighting
-- `FTerm.nvim` - Floating terminal
-- `nvim-ufo` - Better folding
-- `persistence.nvim` - Session management
+### LSP & Completion
+- **vtsls**: TypeScript/JavaScript (relative import paths)
+- **gopls**: Go (with goimports, gofumpt)
+- **jsonls**: JSON with schemastore
+- **blink.cmp**: Completion — Tab/Shift+Tab to navigate, Enter to accept, Ctrl+Space to trigger
+- **Codeium**: AI inline completions (ghost text, Tab to accept) — requires `:Codeium Auth` on first use
+- **Biome**: Formatting for JS/TS/JSON (only activates in projects with `biome.json`)
 
-### AI
-- `claudecode.nvim` - Claude AI integration
-- `snacks.nvim` - Required for Claude Code
+### Language Enhancements
+- **nvim-ts-autotag**: Auto-close and rename HTML/JSX/TSX tags
+- **nvim-colorizer**: Inline color previews for hex, CSS, and Tailwind colors
+- **rainbow-delimiters**: Colorize matching brackets and parentheses
+- **vim-visual-multi**: VS Code-style multi-cursor editing (Ctrl+D for next occurrence, Ctrl+click)
+- **nvim-lightbulb**: VS Code-style lightbulb icon when code actions are available
 
-</details>
+## Key Bindings
 
-## 🚀 Installation
+### Leader Key: Space
 
-The plugins are automatically installed when you first open Neovim!
+### VS Code Style
 
-### Manual Plugin Installation
-```vim
-:Lazy sync
+| Key | Action |
+|-----|--------|
+| `Ctrl+P` | Command palette |
+| `F4` | Search/grep in project |
+| `Ctrl+F` | Search in current buffer |
+| `Ctrl+S` | Save file |
+| `Ctrl+B` | Toggle file explorer |
+| `` Ctrl+` `` | Toggle terminal |
+| `Ctrl+W` | Close current buffer |
+| `Ctrl+/` | Toggle comment |
+| `Ctrl+C` | Copy selection to clipboard |
+| `Ctrl+X` | Cut line / cut selection to clipboard |
+| `Ctrl+V` | Paste from clipboard |
+| `Ctrl+Z` / `Ctrl+Y` | Undo / Redo |
+| `Ctrl+A` | Select all |
+| `Ctrl+.` | Quick fix / Code actions (lightbulb) |
+| `Ctrl+G` | Go to line |
+| `Ctrl+D` | Multi-cursor: add next occurrence |
+| `Shift+Up/Down/Left/Right` | Select lines / characters |
+| `Backspace` / `Delete` | Delete selection (visual mode) |
+| `Alt+Shift+J/K` | Duplicate line down/up |
+| `Tab` / `Shift+Tab` | Cycle windows (normal mode) |
+| `Ctrl+]` | Exit terminal mode to normal mode |
+| `F2` | Rename symbol |
+| `F5` | Debug: Start/Continue |
+| `F9` | Debug: Toggle breakpoint |
+| `Ctrl+F10` | Toggle menu bar |
+| `F10` | Debug: Step over |
+| `F11` | Debug: Step into |
+| `F12` | Go to definition |
+| `Shift+F12` | Go to references |
+| `Alt+J/K` | Move line up/down |
+| `Alt+Shift+J/K` | Duplicate line down/up |
+| `Alt+I` | Toggle Claude Code |
+| `Alt+M` | Toggle menu bar |
+
+### Leader Groups
+
+| Prefix | Group | Key Examples |
+|--------|-------|-------------|
+| `<leader>f` | File/Find | `ff` files, `fp` projects, `fg` grep, `fr` recent, `fb` buffers, `fc` word under cursor |
+| `<leader>c` | Code | `ca` actions, `cr` rename, `cf` format, `cs` symbols, `cl` LSP refs |
+| `<leader>g` | Git | `gg` lazygit, `gs` status, `gS` source control, `gb` log, `gd` diff, `gB` blame, `gD` side-by-side diff |
+| `<leader>s` | Search | `sg` grep, `sw` word, `sk` keymaps, `st` todos, `sr` resume, `sR` replace (grug-far), `sh` help |
+| `<leader>d` | Debug | `db` breakpoint, `dB` conditional, `dc` continue, `di` step in, `do` step over, `dO` step out, `dt` terminate, `du` DAP UI |
+| `<leader>x` | Diagnostics | `xx` all, `xX` buffer, `xt` todos, `xL` loclist, `xQ` quickfix |
+| `<leader>a` | AI (Claude) | `ac` toggle, `af` focus, `ar` resume, `aC` continue, `as` send, `ab` add buffer, `am` model, `aa` accept, `ad` deny |
+| `<leader>t` | Test | `tn` nearest, `tf` file, `ta` all, `td` debug, `ts` summary, `to` output, `tw` watch, `tS` stop |
+| `<leader>o` | Organize | `oi` organize imports, `os` sort imports |
+| `<leader>q` | Session | `qs` restore, `ql` last, `qd` don't save |
+| `<leader>n` | Notifications | `nd` dismiss |
+| `<leader>M` | Menu bar | Toggle top menu |
+
+### LSP Navigation
+
+| Key | Action |
+|-----|--------|
+| `gd` | Go to definition |
+| `gR` | Go to references |
+| `gi` | Go to implementation |
+| `gt` | Go to type definition |
+| `K` | Hover documentation |
+
+### Visual Mode
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+P` | Command palette (selection-aware) |
+| `Ctrl+C` | Copy to clipboard |
+| `Ctrl+X` | Cut to clipboard |
+| `Ctrl+V` | Paste from clipboard |
+| `Ctrl+/` | Toggle comment |
+| `Ctrl+.` | Quick fix / Code actions |
+| `Tab` / `Shift+Tab` | Indent / Outdent |
+| `Shift+Up/Down/Left/Right` | Extend selection |
+| `Backspace` / `Delete` | Delete selection |
+| `Alt+J/K` | Move selection up/down |
+| `Alt+Shift+J/K` | Duplicate selection down/up |
+| `<leader>as` | Send selection to Claude |
+
+### Git Hunks (via gitsigns)
+
+| Key | Action |
+|-----|--------|
+| `]h` / `[h` | Next / previous hunk |
+| `<leader>ghp` | Preview hunk |
+| `<leader>ghs` | Stage hunk |
+| `<leader>ghr` | Reset hunk |
+| `<leader>ghS` | Stage buffer |
+| `<leader>ghR` | Reset buffer |
+
+## Configuration Structure
+
+```
+nvim/.config/nvim/
+├── init.lua                     # Bootstrap lazy.nvim
+├── lazyvim.json                 # LazyVim extras manifest
+└── lua/
+    ├── config/
+    │   ├── lazy.lua             # lazy.nvim + LazyVim setup + extras
+    │   ├── options.lua          # Vim options (absolute lines, 2-space indent)
+    │   ├── keymaps.lua          # VS Code keybindings + command palette
+    │   ├── autocmds.lua         # Filetype settings (Go tabs, TS spaces), session restore
+    │   └── git-panel.lua        # Source Control sidebar (staged/unstaged/untracked sections)
+    └── plugins/
+        ├── colorscheme.lua      # OneDark "darker"
+        ├── editor.lua           # Neo-tree, which-key, tmux-nav, Claude, codediff, grug-far, visual-multi
+        ├── ui.lua               # Winbar tabs, sidebar tabs, terminal management, right-click menu, lualine, noice
+        ├── layout.lua           # VS Code-style layout (edgy.nvim panels: left/bottom/right)
+        ├── coding.lua           # blink.cmp completion
+        ├── dap.lua              # Debug Adapter Protocol (JS/TS/Chrome/Jest debugging)
+        ├── testing.lua          # Neotest with Jest + Vitest adapters
+        ├── formatting.lua       # Biome priority for JS/TS/JSON
+        ├── lang.lua             # Treesitter, vtsls, autotag, colorizer, rainbow-delimiters
+        └── menu.lua             # Top navigation menu bar
 ```
 
-### Mason LSP Installation
-```vim
-:Mason
-```
+## LazyVim Extras Enabled
 
-Then install your language servers (Python, TypeScript, etc.)
+- `lazyvim.plugins.extras.lang.typescript` — vtsls, TS tooling
+- `lazyvim.plugins.extras.lang.go` — gopls, goimports, gofumpt
+- `lazyvim.plugins.extras.lang.json` — jsonls + schemastore
+- `lazyvim.plugins.extras.formatting.biome` — biome via conform.nvim
+- `lazyvim.plugins.extras.ai.codeium` — AI inline completions
 
-## 🔧 Configuration Structure
+## First Launch
 
-```
-nvim/
-├── init.lua                  # Entry point
-├── lua/
-│   ├── core/
-│   │   ├── init.lua          # Core loader
-│   │   ├── options.lua       # Vim options
-│   │   ├── keymaps.lua       # Key mappings
-│   │   └── utils.lua         # Utility functions
-│   ├── plugins/
-│   │   ├── init.lua          # Plugin loader
-│   │   ├── lsp/              # LSP configs
-│   │   ├── theme/            # Theme configs
-│   │   ├── flash.lua         # Flash navigation
-│   │   ├── trouble.lua       # Diagnostics
-│   │   ├── diffview.lua      # Git diffs
-│   │   ├── mini.lua          # Mini.nvim suite
-│   │   ├── ui.lua            # UI plugins
-│   │   ├── todo-comments.lua # TODO highlighting
-│   │   ├── persistence.lua   # Session management
-│   │   ├── dap.lua           # Debugger
-│   │   ├── spectre.lua       # Search & replace
-│   │   ├── claudecode.lua    # AI assistant
-│   │   └── ...               # Other plugins
-│   └── pluginsloader.lua     # Lazy.nvim bootstrap
-└── lazy-lock.json            # Plugin versions
+1. Open `nvim` — plugins auto-install (~30s)
+2. Run `:checkhealth` to verify LSP, treesitter, formatters
+3. Press **F10** or **Space M** for the menu bar
+4. Press **Ctrl+P** for the command palette
+5. Run `:Codeium Auth` to enable AI completions
+6. Run `:Mason` to install additional language servers
 
-```
+## Project Switching
 
-## ⚙️ Customization
+Press `<leader>fp` or select "Projects" from the welcome screen. This scans saved sessions from persistence.nvim, lets you pick a project, and restores the full session (open files, cursor positions, window layout).
 
-### Change Theme
-Edit `init.lua`:
-```lua
-local name = "gruvbox"  -- or "onedark"
-```
+## Customization
 
-### Add LSP Server
-```vim
-:Mason
-```
-Search and install your LSP server
-
-### Add Custom Keymaps
-Edit `lua/core/keymaps.lua`
-
-### Add Plugins
-Create a new file in `lua/plugins/yourplugin.lua`:
+### Add a plugin
+Create `lua/plugins/yourplugin.lua`:
 ```lua
 return {
-    "author/plugin-name",
-    opts = {
-        -- configuration
-    },
+  "author/plugin-name",
+  opts = {},
 }
 ```
 
-## 📚 Resources
-
-- [Lazy.nvim Docs](https://github.com/folke/lazy.nvim)
-- [Neovim LSP Guide](https://neovim.io/doc/user/lsp.html)
-- [Telescope Docs](https://github.com/nvim-telescope/telescope.nvim)
-- [Flash.nvim](https://github.com/folke/flash.nvim)
-- [Mini.nvim](https://github.com/echasnovski/mini.nvim)
-
-## 🐛 Troubleshooting
-
-### Plugins not loading
-```vim
-:Lazy sync
-:Lazy health
+### Add a language
+Enable a LazyVim extra in `lua/config/lazy.lua`:
+```lua
+{ import = "lazyvim.plugins.extras.lang.python" },
 ```
 
-### LSP not working
-```vim
-:LspInfo
-:Mason
-```
+### Change theme
+Edit `lua/plugins/colorscheme.lua` and update `colorscheme` in LazyVim opts.
 
-### Treesitter errors
+## Troubleshooting
+
 ```vim
-:TSUpdate
+:Lazy sync          " Reinstall/update plugins
+:Lazy health        " Check plugin health
+:checkhealth        " Full health check
+:LspInfo            " Check LSP status
+:Mason              " Install language servers
+:TSUpdate           " Update treesitter parsers
 ```
 
 ### Clear cache
@@ -450,27 +337,3 @@ rm -rf ~/.local/share/nvim
 rm -rf ~/.local/state/nvim
 rm -rf ~/.cache/nvim
 ```
-
-## 💡 Pro Tips
-
-1. **Windsurf AI suggestions**: Just start typing - AI suggestions appear automatically (Tab to accept)!
-2. **Learn Flash navigation**: Press `s` and two characters - game changer!
-3. **Use Harpoon**: Mark your most-used files with `<leader>hm`
-4. **Master Telescope**: `<leader>ff` and `<leader>fg` are your best friends
-5. **Neo-tree git status**: Press `<leader>ge` to see all changed files
-6. **Symbol outline**: `<leader>o` to see all functions/classes in current file
-7. **Breadcrumbs**: Look at the top of your window to see where you are in the code structure
-8. **Minimap**: Look at the right side - see your entire file with diagnostics and git changes!
-9. **Trouble for diagnostics**: `<leader>xx` shows all errors beautifully
-10. **Todo-comments**: Write `TODO:` or `FIXME:` and they'll be highlighted
-11. **Diffview for Git**: `<leader>gdo` for beautiful diffs
-12. **Flash in visual mode**: Select text with `S` using treesitter
-13. **Code actions**: `<leader>ca` can fix many issues automatically
-14. **Session persistence**: Your sessions auto-save! Just `<leader>qs` to restore
-15. **Debug without console.log**: `<leader>db` to set breakpoints, `<leader>dc` to debug
-16. **Project-wide refactoring**: Use Spectre (`<leader>S`) for safe find/replace across all files
-17. **Claude Code**: Press `<leader>ac` for AI assistance - it's like having a senior dev next to you!
-
----
-
-**Made with ❤️ by Raul Gavris**
