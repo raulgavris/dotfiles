@@ -1,6 +1,6 @@
-[user]
-	name = Raul Gavris
-	email = rg.raulgavris@gmail.com
+# User identity loaded from separate untracked file (created by install.sh)
+[include]
+	path = ~/.gitconfig.local
 
 [core]
 	editor = nvim
@@ -13,7 +13,7 @@
 	defaultBranch = main
 
 [pull]
-	rebase = true
+	rebase = false
 
 [push]
 	default = current
@@ -61,33 +61,33 @@
 	# Short status
 	s = status -sb
 	st = status
-	
+
 	# Add
 	a = add
 	aa = add --all
 	ap = add --patch
-	
+
 	# Commit
 	c = commit
 	cm = commit -m
 	ca = commit --amend
 	can = commit --amend --no-edit
-	
+
 	# Checkout
 	co = checkout
 	cob = checkout -b
-	
+
 	# Branch
 	b = branch
 	ba = branch -a
 	bd = branch -d
 	bD = branch -D
-	
+
 	# Diff
 	d = diff
 	ds = diff --staged
 	dw = diff --word-diff
-	
+
 	# Log
 	l = log --oneline --graph --decorate
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
@@ -95,56 +95,56 @@
 	lol = log --graph --decorate --pretty=oneline --abbrev-commit
 	lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
 	last = log -1 HEAD --stat
-	
+
 	# Pull/Push
 	pl = pull
 	ps = push
 	pf = push --force-with-lease
-	
+
 	# Remote
 	r = remote -v
-	
+
 	# Stash
 	ss = stash
 	sl = stash list
 	sp = stash pop
 	sa = stash apply
 	sd = stash drop
-	
+
 	# Reset
 	unstage = reset HEAD --
 	undo = reset --soft HEAD^
-	
+
 	# Cleanup
 	cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop' | xargs -n 1 git branch -d"
-	
+
 	# Show aliases
 	aliases = config --get-regexp alias
-	
+
 	# Quick commit all
 	ac = !git add -A && git commit -m
-	
+
 	# Amend last commit with all changes
 	amend = commit -a --amend --no-edit
-	
+
 	# Show what I did today
-	today = log --since=midnight --author='Raul Gavris' --oneline
-	
+	today = "!git log --since=midnight --author=\"$(git config user.name)\" --oneline"
+
 	# Undo last commit but keep changes
 	uncommit = reset --soft HEAD~1
-	
+
 	# Show contributors
 	contributors = shortlog --summary --numbered
-	
+
 	# Find branches containing commit
 	fb = "!f() { git branch -a --contains $1; }; f"
-	
+
 	# Find tags containing commit
 	ft = "!f() { git describe --always --contains $1; }; f"
-	
+
 	# Find commits by commit message
 	fm = "!f() { git log --pretty=format:'%C(yellow)%h %Cblue%ad %Creset%s%Cgreen [%cn] %Cred%d' --decorate --date=short --grep=$1; }; f"
-	
+
 	# Remove branches that have already been merged with main
 	dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
 
@@ -153,3 +153,6 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+[user]
+	name = Ice
+	email = icex@users.noreply.github.com

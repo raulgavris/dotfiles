@@ -10,3 +10,9 @@
 
 # Logs
 *.log
+
+
+.DS_Store
+
+.termdesk-workspace.toml
+termdesk/.config/termdesk/config.toml
