@@ -99,7 +99,7 @@ return {
     opts = {},
   },
 
-  -- gitsigns: inline blame + git hunk signs
+  -- gitsigns: inline blame + git hunk signs + word diff
   {
     "lewis6991/gitsigns.nvim",
     opts = {
@@ -110,6 +110,7 @@ return {
         delay = 500,
       },
       current_line_blame_formatter = "<author>, <author_time:%Y-%m-%d> - <summary>",
+      word_diff = true, -- highlight changed words inline (VS Code style)
     },
   },
 
@@ -143,6 +144,7 @@ return {
   {
     "folke/snacks.nvim",
     opts = {
+      statuscolumn = { enabled = false }, -- replaced by custom statuscolumn in ui.lua
       image = {
         force = true,
       },
