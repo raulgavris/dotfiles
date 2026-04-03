@@ -84,7 +84,7 @@ end
 local spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
 local spinner_counter = 0
 local function start_spinner(msg)
-  spinner_counter = spinner_counter + 1
+  spinner_counter = (spinner_counter % 1000) + 1
   local notify_id = "git_panel_spinner_" .. spinner_counter
   local tick = 0
   local timer = vim.uv.new_timer()
@@ -1158,21 +1158,13 @@ end
 
 -- Debounced refresh — all auto-refresh sources go through here
 local git_watchers = {}
-local refresh_debounce_timer = nil
+local refresh_debounce_timer = vim.uv.new_timer()
 
 local function debounced_refresh()
   if not panel_buf then return end
-  if refresh_debounce_timer then
-    refresh_debounce_timer:stop()
-    refresh_debounce_timer:close()
-  end
-  refresh_debounce_timer = vim.uv.new_timer()
+  refresh_debounce_timer:stop()
   refresh_debounce_timer:start(500, 0, vim.schedule_wrap(function()
-    if refresh_debounce_timer then
-      refresh_debounce_timer:stop()
-      refresh_debounce_timer:close()
-      refresh_debounce_timer = nil
-    end
+    refresh_debounce_timer:stop()
     if panel_buf and vim.api.nvim_buf_is_valid(panel_buf) then
       for _, win in ipairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == panel_buf then
@@ -1185,7 +1177,9 @@ local function debounced_refresh()
 end
 
 -- Auto-refresh when files change or returning from terminal (git CLI)
+local refresh_group = vim.api.nvim_create_augroup("GitPanelRefresh", { clear = true })
 vim.api.nvim_create_autocmd({ "BufWritePost", "FocusGained", "TermClose", "TermLeave" }, {
+  group = refresh_group,
   callback = debounced_refresh,
 })
 
@@ -1226,6 +1220,7 @@ end
 -- Start watchers on first load and when changing directories
 setup_git_watchers()
 vim.api.nvim_create_autocmd("DirChanged", {
+  group = refresh_group,
   callback = setup_git_watchers,
 })
 

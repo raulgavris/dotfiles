@@ -1,7 +1,7 @@
 {
   "extras": [
     "lazyvim.plugins.extras.ai.codeium",
-    "lazyvim.plugins.extras.formatting.biome",
+    "lazyvim.plugins.extras.lang.typescript.biome",
     "lazyvim.plugins.extras.lang.go",
     "lazyvim.plugins.extras.lang.json",
     "lazyvim.plugins.extras.lang.markdown",

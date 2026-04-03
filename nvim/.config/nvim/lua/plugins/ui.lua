@@ -502,6 +502,73 @@ vim.api.nvim_create_autocmd("TermOpen", {
 })
 
 -- ============================================================================
+-- Custom statuscolumn: VS Code-style gutter with click handlers
+-- ============================================================================
+
+-- Left-click sign area → toggle breakpoint; right-click → gutter menu
+function _G.SignClick(_, clicks, button, _)
+  if button == "l" then
+    require("dap").toggle_breakpoint()
+  elseif button == "r" then
+    vim.schedule(function() vim.cmd("popup GutterPopUp") end)
+  end
+end
+
+-- Right-click line number → gutter menu
+function _G.LineNrClick(_, clicks, button, _)
+  if button == "r" then
+    vim.schedule(function() vim.cmd("popup GutterPopUp") end)
+  end
+end
+
+-- Click fold column → toggle fold
+function _G.FoldClick(_, clicks, button, _)
+  if button == "l" then
+    local line = vim.fn.getmousepos().line
+    if vim.fn.foldlevel(line) > 0 then
+      vim.cmd(line .. "foldtoggle")
+    end
+  end
+end
+
+vim.o.statuscolumn = "%@v:lua.SignClick@%s%T%=%@v:lua.LineNrClick@%l %T%@v:lua.FoldClick@%C%T"
+
+-- Gutter right-click popup menu (breakpoints + git actions)
+local gutter_items = {
+  { label = "Toggle Breakpoint",    key = "F9",   action = "<cmd>lua require('dap').toggle_breakpoint()<cr>" },
+  { label = "Conditional Breakpoint", key = "␣dB", action = "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Condition: '))<cr>" },
+  { label = "Log Point",            key = "",     action = "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log message: '))<cr>" },
+  { label = "Run to Cursor",        key = "",     action = "<cmd>lua require('dap').run_to_cursor()<cr>" },
+  { label = "---" },
+  { label = "Preview Hunk Inline",  key = "",     action = "<cmd>Gitsigns preview_hunk_inline<cr>" },
+  { label = "Stage Hunk",           key = "␣ghs", action = "<cmd>Gitsigns stage_hunk<cr>" },
+  { label = "Reset Hunk",           key = "␣ghr", action = "<cmd>Gitsigns reset_hunk<cr>" },
+  { label = "Undo Stage Hunk",      key = "",     action = "<cmd>Gitsigns undo_stage_hunk<cr>" },
+  { label = "---" },
+  { label = "Blame Line",           key = "␣gB",  action = "<cmd>Gitsigns blame_line full=true<cr>" },
+  { label = "Toggle Inline Blame",  key = "",     action = "<cmd>Gitsigns toggle_current_line_blame<cr>" },
+  { label = "Toggle Word Diff",     key = "",     action = "<cmd>Gitsigns toggle_word_diff<cr>" },
+}
+
+do
+  local max_len = 0
+  for _, item in ipairs(gutter_items) do
+    if item.label ~= "---" then max_len = math.max(max_len, #item.label) end
+  end
+  local sep_n = 0
+  for _, item in ipairs(gutter_items) do
+    if item.label == "---" then
+      sep_n = sep_n + 1
+      vim.cmd(string.format("anoremenu GutterPopUp.-%d- <Nop>", sep_n))
+    else
+      local pad = max_len - #item.label + 4
+      local name = item.label:gsub(" ", "\\ ") .. string.rep("\\ ", pad) .. item.key:gsub(" ", "\\ ")
+      vim.cmd(string.format("anoremenu GutterPopUp.%s %s", name, item.action))
+    end
+  end
+end
+
+-- ============================================================================
 -- Right-click context menu
 -- ============================================================================
 
