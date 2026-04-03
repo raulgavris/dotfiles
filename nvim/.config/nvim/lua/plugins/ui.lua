@@ -551,6 +551,7 @@ local gutter_items = {
 }
 
 do
+  pcall(vim.cmd, "aunmenu GutterPopUp") -- clear before rebuilding (idempotent on re-source)
   local max_len = 0
   for _, item in ipairs(gutter_items) do
     if item.label ~= "---" then max_len = math.max(max_len, #item.label) end
