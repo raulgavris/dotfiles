@@ -373,6 +373,7 @@ packages=(
     "nvim"
     "ghostty"
     "termdesk"
+    "claude"
 )
 
 # OS-specific packages
@@ -383,12 +384,108 @@ fi
 for package in "${packages[@]}"; do
     if [ -d "$package" ]; then
         print_info "Stowing $package..."
-        stow "$package" --adopt -t "$HOME" 2>&1 || print_warning "Failed to stow $package (might already exist)"
+        # `claude` uses --no-folding so we get file-level symlinks inside ~/.claude/.
+        # Claude Code writes runtime state (sessions/, todos/, file-history/) into
+        # that directory — directory-level folding would collide with those.
+        if [ "$package" = "claude" ]; then
+            stow "$package" --no-folding -t "$HOME" 2>&1 || print_warning "Failed to stow $package"
+        else
+            stow "$package" --adopt -t "$HOME" 2>&1 || print_warning "Failed to stow $package (might already exist)"
+        fi
         print_success "$package stowed"
     else
         print_warning "Package directory $package not found, skipping"
     fi
 done
+
+# ============================================
+# Claude Code: merge hook registrations + chmod scripts
+# ============================================
+if [ -f "$HOME/.claude/settings.template.json" ]; then
+    print_header "🤖 Wiring Claude Code hooks"
+
+    if ! command -v jq >/dev/null 2>&1; then
+        print_warning "jq not found — skipping Claude hook registration. Install jq and re-run."
+    else
+        # Ensure executable bits on hook scripts
+        find "$HOME/.claude/hooks" -name "*.sh" -type f -exec chmod +x {} \; 2>/dev/null
+        find "$HOME/.claude/hooks" -name "*.sh" -type l -exec chmod +x {} \; 2>/dev/null
+        print_success "Hook scripts marked executable"
+
+        # Expand $HOME in the template, then merge into ~/.claude/settings.json.
+        # Merge strategy: union hook arrays by "command" path so re-runs are idempotent.
+        tpl_expanded=$(mktemp)
+        sed "s|\$HOME|$HOME|g" "$HOME/.claude/settings.template.json" > "$tpl_expanded"
+
+        if [ ! -f "$HOME/.claude/settings.json" ]; then
+            echo '{}' > "$HOME/.claude/settings.json"
+        fi
+
+        # Backup then merge. The merge adds any hook whose command isn't already present.
+        cp "$HOME/.claude/settings.json" "$HOME/.claude/settings.json.backup-claude-stow-$(date +%Y%m%d-%H%M%S)"
+
+        merged=$(mktemp)
+        jq --slurpfile tpl "$tpl_expanded" '
+          def mergeHookEvent($existing; $incoming):
+            ($existing // []) as $e
+            | ($incoming // []) as $i
+            | reduce $i[] as $group (
+                $e;
+                ($group.matcher // "") as $m
+                | . as $acc
+                | if any(.[]; (.matcher // "") == $m) then
+                    map(
+                      if (.matcher // "") == $m then
+                        .hooks = (
+                          (.hooks // []) + (
+                            ($group.hooks // []) | map(
+                              . as $new
+                              | select(
+                                  ([$acc[] | select((.matcher // "") == $m) | (.hooks // [])[] | .command] | index($new.command)) == null
+                                )
+                            )
+                          )
+                        )
+                      else . end
+                    )
+                  else . + [$group]
+                  end
+              );
+
+          ($tpl[0].hooks // {}) as $T
+          | .hooks = (
+              (.hooks // {}) as $H
+              | reduce ($T | keys_unsorted[]) as $event (
+                  $H;
+                  .[$event] = mergeHookEvent(.[$event]; $T[$event])
+                )
+            )
+          | del(._comment)
+        ' "$HOME/.claude/settings.json" > "$merged"
+
+        if [ -s "$merged" ] && jq -e . "$merged" >/dev/null 2>&1; then
+            # Use `command cp -f` to avoid any interactive `mv -i` alias.
+            command cp -f "$merged" "$HOME/.claude/settings.json"
+            print_success "Claude hooks merged into ~/.claude/settings.json"
+        else
+            print_warning "jq merge produced invalid JSON — leaving settings.json unchanged. Backup available."
+        fi
+        command rm -f "$merged" "$tpl_expanded"
+
+        # Register useful local MCP servers if `claude` CLI is available and the
+        # server isn't already registered. User-scoped so it works across projects.
+        if command -v claude >/dev/null 2>&1; then
+            if ! claude mcp list 2>/dev/null | grep -q '^chrome-devtools:'; then
+                print_info "Registering chrome-devtools MCP (user scope)..."
+                claude mcp add -s user chrome-devtools -- npx -y chrome-devtools-mcp@latest >/dev/null 2>&1 \
+                    && print_success "chrome-devtools MCP registered" \
+                    || print_warning "chrome-devtools MCP registration failed (re-run 'claude mcp add ...' manually)"
+            else
+                print_success "chrome-devtools MCP already registered"
+            fi
+        fi
+    fi
+fi
 
 # Install .zshrc as a regular file (not symlinked by stow)
 # This allows p10k configure and other tools to modify ~/.zshrc
