@@ -40,6 +40,7 @@ Each directory mirrors the home directory structure:
 - `karabiner/.config/karabiner/` -> `~/.config/karabiner/` (macOS only)
 - `ghostty/.config/ghostty/config` -> `~/.config/ghostty/config`
 - `termdesk/.config/termdesk/config.toml` -> `~/.config/termdesk/config.toml` (runtime state not tracked)
+- `claude/.claude/{commands,agents,hooks}/` -> `~/.claude/{commands,agents,hooks}/` (stowed with `--no-folding` so Claude Code's runtime state in `~/.claude/sessions/`, `~/.claude/todos/` etc. is not clobbered). See `claude/README.md` for contents. `settings.template.json` is jq-merged into `~/.claude/settings.json` by install.sh.
 
 ### Cross-Platform Notes
 - `install.sh` uses `detect_os()` to set `OS` to "macos" or "linux"

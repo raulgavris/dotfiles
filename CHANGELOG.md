@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-04-17 — Added `claude` stow package (Claude Code workflow bundle)
+
+### New stow package: `claude/.claude/`
+Portable Claude Code commands, subagents, and productive hooks. No hardcoded paths, usernames, or project names — everything adapts by reading the current repo's `CLAUDE.md`/`AGENTS.md` and detecting the stack from config files.
+
+- **Commands** (`~/.claude/commands/`):
+  - `/super-review` — dispatches 5+ parallel review subagents, starts the dev server, runs an E2E probe, and enters a fix-loop for your own PRs until clean.
+  - `/investigate-bug` — systematic bug investigation; delegates log/metric correlation to the `log-analyst` subagent.
+  - `/gen-test` — generates tests matching the project's framework (vitest/jest/pytest/go) and style exemplars.
+  - `/streamline-claude` — rerunnable audit that surveys `~/.claude/` + projects tree and produces a prioritized improvement plan. Shareable.
+- **Subagents** (`~/.claude/agents/`): `backend-reviewer`, `dev-server-tester`, `log-analyst`, `biome-fixer`.
+- **Hooks** (`~/.claude/hooks/`):
+  - `autoformat/autoformat.sh` (PostToolUse) — biome/eslint/prettier/gofmt/ruff/rustfmt on edit, non-blocking.
+  - `verify-reminder/reminder.sh` (Stop) — reminds if session edited code but never ran tests/lint/typecheck.
+  - `secret-guard/guard.sh` (PreToolUse) — blocks edits to `.env`, lockfiles, keys.
+- **settings.template.json** — hook registrations merged into `~/.claude/settings.json` via `jq` (idempotent).
+
+### install.sh changes
+- Added `claude` to the stow packages list.
+- Stowed with `--no-folding` so Claude Code's runtime state (`~/.claude/sessions/`, `~/.claude/todos/`, etc.) is not clobbered.
+- After stow: `chmod +x ~/.claude/hooks/*/*.sh` + `jq`-merge `settings.template.json` into existing `~/.claude/settings.json` (creates a timestamped backup first).
+
+### .gitignore additions
+- Excluded all runtime/personal Claude state from the stow package (`settings.json`, `memory/`, `sessions/`, `todos/`, etc.) — only portable content is tracked.
+
+### MCP servers registered by install.sh
+- **chrome-devtools** — `npx -y chrome-devtools-mcp@latest`, user scope. Lets Claude drive a local Chrome for deeper front-end debugging (console, network, DOM, screenshots).
+
+### Why
+Our Claude Code usage was organically grown — manual lint after every edit, no subagents despite wanting parallel review, no PR E2E discipline. This package captures the productive patterns in portable form so the same workflow runs on any machine (and for any colleague who clones the dotfiles).
+
 ## 2026-02-07 — Cross-Platform Support (macOS + Ubuntu/Debian)
 
 ### install.sh — Added superfile (terminal file manager)
