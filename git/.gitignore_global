@@ -97,8 +97,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# lib/ and lib64/ removed — too broad, catches src/lib/ in JS/TS projects.
+# Python venvs already covered by .venv and venv/ entries below.
 parts/
 sdist/
 var/

@@ -123,3 +123,15 @@ fi
 if [[ ! -f "$HOME/.ohmyposh.omp.json" ]]; then
   [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 fi
+
+# fnm (Fast Node Manager) — cross-platform
+if command -v fnm &>/dev/null; then
+  eval "$(fnm env --use-on-cd)"
+fi
+
+# zoxide — smarter cd. `cd term` jumps to most-frecent dir matching "term".
+# Must be initialized near the end so the alias isn't overwritten by later sourcing.
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+  alias cd='z'
+fi

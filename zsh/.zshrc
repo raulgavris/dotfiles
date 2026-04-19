@@ -10,8 +10,8 @@ fi
 source "$HOME/.zshrc.base"
 
 
-# Source user profile
-source "$HOME/.profile"
+# Source user profile (machine-specific aliases / PATH — optional)
+[[ -f "$HOME/.profile" ]] && source "$HOME/.profile"
 
 # Task Master aliases added on 2/10/2026
 alias tm='task-master'
