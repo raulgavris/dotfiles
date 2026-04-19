@@ -18,6 +18,9 @@ Portable global Claude Code configuration: slash commands, subagents, and produc
 │   ├── dev-server-tester.md   # Starts dev server, probes endpoints, collects logs
 │   ├── log-analyst.md         # Correlates symptoms with logs/errors/metrics
 │   └── biome-fixer.md         # Narrow lint/format worker
+├── skills/
+│   └── migrate-windows-games-to-proton/ # Port Windows-side games (GOG/repacks/standalone)
+│                                        # and their saves into Steam+Proton on Linux
 ├── hooks/
 │   ├── autoformat/autoformat.sh  # PostToolUse: auto-format edited files (biome/eslint/gofmt/ruff)
 │   ├── verify-reminder/reminder.sh # Stop: remind to run tests if none ran
