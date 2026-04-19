@@ -61,7 +61,14 @@
       "WebFetch(domain:github.com)",
       "Bash(wc:*)",
       "Bash(basename:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Read(//home/bogdan/**)",
+      "Read(//home/bogdan/.claude/hooks/peon-ping/**)",
+      "Bash(oh-my-posh --version)",
+      "Bash(/bin/zsh -ic 'echo $PATH; echo ---; type peon; type oh-my-posh; type p10k 2>&1')",
+      "Bash(fnm list *)",
+      "Bash(export PATH=\"/home/bogdan/.local/share/fnm/aliases/default/bin:/home/bogdan/.npm-global/bin:$PATH\")",
+      "Bash(npm install *)"
     ]
   }
 }
