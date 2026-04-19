@@ -22,8 +22,15 @@ Portable global Claude Code configuration: slash commands, subagents, and produc
 │   ├── autoformat/autoformat.sh  # PostToolUse: auto-format edited files (biome/eslint/gofmt/ruff)
 │   ├── verify-reminder/reminder.sh # Stop: remind to run tests if none ran
 │   └── secret-guard/guard.sh  # PreToolUse: block edits to .env, lockfiles, keys
+├── skills/
 └── settings.template.json     # Hook registrations, merged into your ~/.claude/settings.json by install.sh
+
+state/plugins/                 # NOT stowed — seeded into ~/.claude/plugins/ by install.sh
+├── installed_plugins.json     # List of installed Claude Code plugins (with __HOME__ tokens)
+└── known_marketplaces.json    # Configured plugin marketplaces
 ```
+
+**peon-ping** (sound effects + desktop notifications) is installed separately by `install.sh` via its upstream installer (`brew` on macOS, `curl | bash` on Linux). Its hook files and sound packs live outside this stow package — run `peon-ping-setup` to (re)install them.
 
 ## Installation
 

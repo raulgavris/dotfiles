@@ -36,7 +36,6 @@ claude/.claude/projects/
 claude/.claude/backups/
 claude/.claude/plugins/
 claude/.claude/statsig/
-claude/.claude/skills/houdiniswap.md
 claude/.claude/**/*.bak*
 claude/.claude/**/security_warnings_state_*
 claude/.claude/**/limitline-*

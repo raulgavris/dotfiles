@@ -1,0 +1,34 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "__HOME__/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2026-04-19T09:11:12.772Z"
+  },
+  "anthropic-agent-skills": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/skills"
+    },
+    "installLocation": "__HOME__/.claude/plugins/marketplaces/anthropic-agent-skills",
+    "lastUpdated": "2026-02-04T08:12:31.708Z"
+  },
+  "claude-code-plugins-plus": {
+    "source": {
+      "source": "github",
+      "repo": "jeremylongshore/claude-code-plugins"
+    },
+    "installLocation": "__HOME__/.claude/plugins/marketplaces/claude-code-plugins-plus",
+    "lastUpdated": "2026-02-04T08:13:12.294Z"
+  },
+  "android-reverse-engineering-skill": {
+    "source": {
+      "source": "github",
+      "repo": "SimoneAvogadro/android-reverse-engineering-skill"
+    },
+    "installLocation": "__HOME__/.claude/plugins/marketplaces/android-reverse-engineering-skill",
+    "lastUpdated": "2026-03-17T22:40:55.666Z"
+  }
+}

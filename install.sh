@@ -144,6 +144,15 @@ if [ "$OS" = "macos" ]; then
     else
         print_success "Ghostty already installed"
     fi
+
+    # peon-ping (sound effects + notifications for Claude Code)
+    print_info "Installing peon-ping..."
+    if ! command -v peon &>/dev/null; then
+        brew install peonping/tap/peon-ping
+        print_success "peon-ping installed"
+    else
+        print_success "peon-ping already installed"
+    fi
 fi
 
 # ============================================
@@ -324,6 +333,15 @@ if [ "$OS" = "linux" ]; then
         gsettings set org.gnome.desktop.input-sources xkb-options "['altwin:ctrl_win']"
         print_success "Super/Win keys now act as Ctrl (macOS-style)"
     fi
+
+    # peon-ping (sound effects + notifications for Claude Code)
+    print_info "Installing peon-ping..."
+    if ! command -v peon &>/dev/null; then
+        curl -fsSL https://raw.githubusercontent.com/PeonPing/peon-ping/main/install.sh | bash
+        print_success "peon-ping installed"
+    else
+        print_success "peon-ping already installed"
+    fi
 fi
 
 # ============================================
@@ -471,6 +489,28 @@ if [ -f "$HOME/.claude/settings.template.json" ]; then
             print_warning "jq merge produced invalid JSON — leaving settings.json unchanged. Backup available."
         fi
         command rm -f "$merged" "$tpl_expanded"
+
+        # Seed plugin state (installed plugins + known marketplaces) if the target
+        # files don't exist yet. Stored with __HOME__ tokens and expanded on install.
+        plugin_state_src="$DOTFILES_DIR/claude/state/plugins"
+        plugin_state_dst="$HOME/.claude/plugins"
+        if [ -d "$plugin_state_src" ]; then
+            mkdir -p "$plugin_state_dst"
+            for f in installed_plugins.json known_marketplaces.json; do
+                if [ -f "$plugin_state_src/$f" ] && [ ! -f "$plugin_state_dst/$f" ]; then
+                    sed "s|__HOME__|$HOME|g" "$plugin_state_src/$f" > "$plugin_state_dst/$f"
+                    print_success "Seeded ~/.claude/plugins/$f"
+                fi
+            done
+        fi
+
+        # Run peon-ping-setup so the hook directory + default sound packs are in place.
+        if command -v peon-ping-setup >/dev/null 2>&1 && [ ! -d "$HOME/.claude/hooks/peon-ping" ]; then
+            print_info "Running peon-ping-setup (downloads default sound packs)..."
+            peon-ping-setup >/dev/null 2>&1 \
+                && print_success "peon-ping hooks + packs installed" \
+                || print_warning "peon-ping-setup failed (run manually to retry)"
+        fi
 
         # Register useful local MCP servers if `claude` CLI is available and the
         # server isn't already registered. User-scoped so it works across projects.
