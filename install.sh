@@ -181,10 +181,17 @@ if [ "$OS" = "linux" ]; then
         xclip \
         build-essential \
         ffmpeg \
-        7zip \
         jq \
         poppler-utils \
         imagemagick
+
+    # 7-Zip — package name changed: `p7zip-full` on 22.04, `7zip` on 23.10+.
+    # Prefer `7zip` if the repo offers it, fall back to `p7zip-full` otherwise.
+    if apt-cache show 7zip >/dev/null 2>&1; then
+        sudo apt install -y 7zip
+    else
+        sudo apt install -y p7zip-full
+    fi
 
     print_success "apt packages installed"
 
@@ -538,6 +545,12 @@ if [ -L "$HOME/.zshrc" ]; then
 elif [ ! -f "$HOME/.zshrc" ]; then
     cp "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
     print_success ".zshrc installed"
+elif ! grep -q '\.zshrc\.base' "$HOME/.zshrc" 2>/dev/null; then
+    # Existing .zshrc doesn't source .zshrc.base — likely the default Oh My Zsh
+    # template that the OMZ installer dropped in. Replace it, keeping a backup.
+    cp "$HOME/.zshrc" "$HOME/.zshrc.pre-dotfiles-$(date +%Y%m%d-%H%M%S)"
+    cp "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
+    print_warning ".zshrc didn't source .zshrc.base — replaced (backup saved as ~/.zshrc.pre-dotfiles-*)"
 else
     print_success ".zshrc already exists (not overwriting)"
 fi
@@ -830,8 +843,24 @@ print_header "🐚 Setting Zsh as Default Shell"
 
 if [[ "$(basename "$SHELL")" != "zsh" ]]; then
     print_info "Changing default shell to Zsh..."
-    chsh -s "$(which zsh)"
-    print_success "Default shell changed to Zsh"
+    zsh_path="$(which zsh)"
+    while true; do
+        if chsh -s "$zsh_path"; then
+            print_success "Default shell changed to Zsh"
+            break
+        fi
+        print_warning "chsh failed or was cancelled."
+        read -rp "$(echo -e "${BLUE}ℹ${NC}") Retry? [Y/n/skip]: " retry_choice
+        retry_choice="${retry_choice:-y}"
+        case "$retry_choice" in
+            [Yy]*) continue ;;
+            [Ss]*|[Nn]*)
+                print_warning "Skipping shell change. Run 'chsh -s $zsh_path' later to set Zsh as default."
+                break
+                ;;
+            *) print_error "Please enter Y, n, or skip." ;;
+        esac
+    done
 else
     print_success "Zsh is already the default shell"
 fi
