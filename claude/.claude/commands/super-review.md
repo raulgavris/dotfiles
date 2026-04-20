@@ -38,6 +38,7 @@ In **one** assistant turn, spawn **all applicable** agents with `Agent` tool cal
 | Agent | When to include |
 |---|---|
 | `backend-reviewer` | Always |
+| `ai-slop-hunter` | Always. Grumpy, by-the-book reviewer dedicated to finding AI-generated slop, fake robustness, design laziness. |
 | `pr-review-toolkit:silent-failure-hunter` | If diff adds/modifies `try/catch`, error returns, `.catch(...)`, or fallback logic |
 | `pr-review-toolkit:type-design-analyzer` | If new or modified types (TS `interface`/`type`, Go `struct`, dataclasses) |
 | `pr-review-toolkit:pr-test-analyzer` | Always when code is non-trivial |
@@ -74,6 +75,7 @@ Combine every agent's output into one review. Use the project's scoreboard if `C
 | Category | Score | Notes |
 |---|---|---|
 | Code Quality | X/10 | |
+| Human Feel (AI-slop check) | X/10 | From ai-slop-hunter; 10 = looks like a careful senior wrote it |
 | Type Safety | X/10 | |
 | Security | X/10 | |
 | Robustness | X/10 | |
