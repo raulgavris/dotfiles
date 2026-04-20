@@ -68,7 +68,9 @@
       "Bash(/bin/zsh -ic 'echo $PATH; echo ---; type peon; type oh-my-posh; type p10k 2>&1')",
       "Bash(fnm list *)",
       "Bash(export PATH=\"/home/bogdan/.local/share/fnm/aliases/default/bin:/home/bogdan/.npm-global/bin:$PATH\")",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(claude --version)",
+      "Bash(claude plugin *)"
     ]
   }
 }
