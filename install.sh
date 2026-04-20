@@ -497,18 +497,57 @@ if [ -f "$HOME/.claude/settings.template.json" ]; then
         fi
         command rm -f "$merged" "$tpl_expanded"
 
-        # Seed plugin state (installed plugins + known marketplaces) if the target
-        # files don't exist yet. Stored with __HOME__ tokens and expanded on install.
+        # Bootstrap Claude Code plugins from the declared inventory. The state files
+        # in claude/state/plugins/ are the source of truth; the `claude plugin` CLI
+        # actually downloads the plugin code into ~/.claude/plugins/{cache,marketplaces}.
+        # Earlier versions of this script only seeded the state JSON, which left the
+        # cache empty and plugins showing as "disabled" in `claude plugin list`.
         plugin_state_src="$DOTFILES_DIR/claude/state/plugins"
-        plugin_state_dst="$HOME/.claude/plugins"
-        if [ -d "$plugin_state_src" ]; then
-            mkdir -p "$plugin_state_dst"
-            for f in installed_plugins.json known_marketplaces.json; do
-                if [ -f "$plugin_state_src/$f" ] && [ ! -f "$plugin_state_dst/$f" ]; then
-                    sed "s|__HOME__|$HOME|g" "$plugin_state_src/$f" > "$plugin_state_dst/$f"
-                    print_success "Seeded ~/.claude/plugins/$f"
+        if [ -d "$plugin_state_src" ] && command -v claude >/dev/null 2>&1; then
+            # 1. Register marketplaces (idempotent — skip if already present).
+            if [ -f "$plugin_state_src/known_marketplaces.json" ]; then
+                existing_mps=$(claude plugin marketplace list 2>/dev/null || true)
+                while IFS=$'\t' read -r mp_name mp_repo; do
+                    [ -z "$mp_name" ] || [ -z "$mp_repo" ] && continue
+                    if printf '%s\n' "$existing_mps" | grep -qE "❯[[:space:]]+${mp_name}\$"; then
+                        continue
+                    fi
+                    print_info "Adding Claude marketplace: $mp_name ($mp_repo)"
+                    claude plugin marketplace add "$mp_repo" >/dev/null 2>&1 \
+                        && print_success "marketplace $mp_name registered" \
+                        || print_warning "marketplace $mp_name failed (check 'claude plugin marketplace add $mp_repo')"
+                done < <(jq -r 'to_entries[] | [.key, (.value.source.repo // "")] | @tsv' "$plugin_state_src/known_marketplaces.json")
+            fi
+
+            # 2. Install user-scoped plugins. Skip the loop entirely if the plugin
+            # cache already has content — treat that as "bootstrap already done"
+            # so normal re-runs of install.sh stay fast. Force a re-run by deleting
+            # ~/.claude/plugins/cache/ or by invoking `claude plugin install` manually.
+            if [ -f "$plugin_state_src/installed_plugins.json" ]; then
+                cache_dir="$HOME/.claude/plugins/cache"
+                if [ -d "$cache_dir" ] && [ -n "$(ls -A "$cache_dir" 2>/dev/null)" ]; then
+                    print_success "Claude plugin cache present — skipping plugin install loop"
+                else
+                    print_info "Installing Claude plugins from inventory (this takes a few minutes)..."
+                    plugin_count=0
+                    plugin_failed=0
+                    while IFS= read -r plugin_ref; do
+                        [ -z "$plugin_ref" ] && continue
+                        plugin_count=$((plugin_count + 1))
+                        if claude plugin install "$plugin_ref" -s user >/dev/null 2>&1; then
+                            printf '  %s installed\n' "$plugin_ref"
+                        else
+                            plugin_failed=$((plugin_failed + 1))
+                            print_warning "  $plugin_ref — install failed (removed upstream or network error)"
+                        fi
+                    done < <(jq -r '.plugins | to_entries[] | select(.value[] | .scope == "user") | .key' "$plugin_state_src/installed_plugins.json")
+                    if [ "$plugin_failed" -eq 0 ]; then
+                        print_success "Installed $plugin_count Claude plugins"
+                    else
+                        print_warning "Installed $((plugin_count - plugin_failed))/$plugin_count plugins ($plugin_failed failed — see warnings above)"
+                    fi
                 fi
-            done
+            fi
         fi
 
         # Run peon-ping-setup so the hook directory + default sound packs are in place.
@@ -685,8 +724,8 @@ done
 print_header "🎨 Configuring Shell Prompt"
 
 print_info "Which prompt engine would you like?"
-echo "  1) Oh My Posh — 124+ themes with live preview, cross-platform (Recommended)"
-echo "  2) Powerlevel10k — classic zsh prompt, configure with 'p10k configure'"
+echo "  1) Powerlevel10k — classic zsh prompt, configure with 'p10k configure' (Recommended)"
+echo "  2) Oh My Posh — 124+ themes with live preview, cross-platform"
 while true; do
     read -rp "$(echo -e "${BLUE}ℹ${NC}") Choose [1/2] (default: 1): " prompt_choice
     prompt_choice="${prompt_choice:-1}"
@@ -697,7 +736,7 @@ while true; do
     fi
 done
 
-if [[ "$prompt_choice" == "1" ]]; then
+if [[ "$prompt_choice" == "2" ]]; then
     # --- Oh My Posh ---
     # Find themes directory
     POSH_THEMES=""
@@ -873,9 +912,9 @@ print_header "✨ Installation Complete!"
 echo ""
 print_info "Next steps:"
 if [[ "$prompt_choice" == "1" ]]; then
-    echo "  1. Run 'omp-theme' to change Oh My Posh theme anytime"
-else
     echo "  1. Run 'p10k configure' to set up Powerlevel10k prompt"
+else
+    echo "  1. Run 'omp-theme' to change Oh My Posh theme anytime"
 fi
 echo "  2. Open tmux and press 'Ctrl-a + I' to install tmux plugins"
 echo "  3. Press 'Ctrl-a + H' in tmux to view the Tmux guide"
