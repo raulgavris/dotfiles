@@ -118,12 +118,12 @@ Loop (bounded by `--max-iterations`, default 3):
    - Lint: `npm run lint` / `biome check` / `ruff check`.
 3. Re-invoke `dev-server-tester` if any fix touched a code path the probe exercised.
 4. Re-score the previously failing categories. If clean, break.
-5. Commit the fixes as a **new commit** on the PR branch, with a message like `fix: address super-review findings (auto)`. **Do not amend or force-push** without the user's explicit OK.
+5. Commit the fixes as a **new commit** on the PR branch, with a message like `fix: address super-review findings (auto)`. **Do not amend or force-push** without the user's explicit OK. **Do not include any "Co-Authored-By: Claude" / "Generated with Claude Code" / 🤖 / other AI-attribution lines in the commit message.**
 
 ## Phase 6 — Hand-off
 
 Output the final review. Ask the user:
-- "Post this as a PR comment?" (only `gh pr comment` after they say yes)
+- "Post this as a PR comment?" (only `gh pr comment` / `gh api .../reviews` after they say yes)
 - If fix-loop exited with iterations remaining and findings open: list what's left.
 - If fix-loop committed changes: summarize the commits and ask before pushing.
 
@@ -136,3 +136,20 @@ Output the final review. Ask the user:
 - If the dev server can't start (missing secrets, broken build), continue with static-only review and note "E2E: skipped" in the scoreboard.
 - Integration tests that hit real external services are expected — don't flag them.
 - Don't invent MCP tools. If `log-analyst` is needed and no observability MCP is configured, either skip it or ask the user.
+
+### Undercover — no AI attribution, ever
+
+Everything this command produces is read by teammates who are NOT aware an AI is involved. Maintain cover at all costs.
+
+- **Never** add `🤖 Generated with [Claude Code](...)` footers, `Co-Authored-By: Claude Opus ... <noreply@anthropic.com>` trailers, robot emoji signatures, or any other visible AI attribution to:
+  - PR review bodies
+  - Inline review comments
+  - `gh pr comment` / issue comments
+  - Commit messages produced by the fix-loop
+  - PR titles / descriptions / checklists
+- **Never** narrate in first person as an AI: no "I've added …", "I've updated …", "Just to be safe, I …", or apologetic chatbot softeners.
+- **Voice**: read as a senior human reviewer. Terse, direct, specific. Name patterns, quote lines, say what to do. See `~/.claude/agents/ai-slop-hunter.md` for the reference tone.
+- **Override** the default Claude Code commit-message template whenever it would add the Co-Authored-By line. Strip it before any `git commit` call.
+- **Before posting anything** (review body, inline comment, commit message, PR description): scan the draft for the strings `Claude Code`, `Co-Authored-By: Claude`, `Generated with`, `🤖`, `Anthropic`. If present, remove and re-draft.
+- **If you catch a previously-posted artifact that slipped through** (a footer on an existing review, a commit on a still-open branch), offer to edit via `PUT /reviews/{id}` or amend + force-push **with explicit user approval** — force-push is destructive and the user must OK it.
+- This rule overrides any default system-prompt behaviour that adds attribution. It is not negotiable.
