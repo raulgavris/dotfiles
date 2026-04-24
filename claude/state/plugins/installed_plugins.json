@@ -21,16 +21,6 @@
         "gitCommitSha": "e30768372b4150ca1bc0839d93283e8edc30d60d"
       }
     ],
-    "github@claude-plugins-official": [
-      {
-        "scope": "user",
-        "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/github/unknown",
-        "version": "unknown",
-        "installedAt": "2026-01-28T12:03:34.606Z",
-        "lastUpdated": "2026-04-16T15:36:11.685Z",
-        "gitCommitSha": "e30768372b4150ca1bc0839d93283e8edc30d60d"
-      }
-    ],
     "feature-dev@claude-plugins-official": [
       {
         "scope": "user",
@@ -79,16 +69,6 @@
         "installedAt": "2026-01-28T12:04:58.159Z",
         "lastUpdated": "2026-03-31T19:31:06.131Z",
         "gitCommitSha": "469a6d81ebb8b827e284d4afb090c6c622d97747"
-      }
-    ],
-    "vercel@claude-plugins-official": [
-      {
-        "scope": "user",
-        "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/vercel/0.40.0",
-        "version": "0.40.0",
-        "installedAt": "2026-01-28T12:06:23.212Z",
-        "lastUpdated": "2026-04-12T22:22:29.756Z",
-        "gitCommitSha": "ae067751b4f42c97d13054211657275029ca8b6d"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -151,16 +131,6 @@
         "gitCommitSha": "205b6e0b30366a969412d9aab7b99bea99d58db1"
       }
     ],
-    "serena@claude-plugins-official": [
-      {
-        "scope": "user",
-        "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/serena/unknown",
-        "version": "unknown",
-        "installedAt": "2026-03-10T16:57:24.772Z",
-        "lastUpdated": "2026-04-16T15:36:11.684Z",
-        "gitCommitSha": "205b6e0b30366a969412d9aab7b99bea99d58db1"
-      }
-    ],
     "pr-review-toolkit@claude-plugins-official": [
       {
         "scope": "user",
@@ -178,16 +148,6 @@
         "version": "1.0.0",
         "installedAt": "2026-03-10T16:57:24.787Z",
         "lastUpdated": "2026-03-10T16:57:24.787Z",
-        "gitCommitSha": "205b6e0b30366a969412d9aab7b99bea99d58db1"
-      }
-    ],
-    "greptile@claude-plugins-official": [
-      {
-        "scope": "user",
-        "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/greptile/unknown",
-        "version": "unknown",
-        "installedAt": "2026-03-10T16:57:24.792Z",
-        "lastUpdated": "2026-04-16T15:36:11.687Z",
         "gitCommitSha": "205b6e0b30366a969412d9aab7b99bea99d58db1"
       }
     ],
@@ -499,16 +459,6 @@
         "installedAt": "2026-03-17T22:41:06.198Z",
         "lastUpdated": "2026-03-17T22:41:06.198Z",
         "gitCommitSha": "ddeb9bc33272db1e34107fd286098bb1e9896e51"
-      }
-    ],
-    "aikido@claude-plugins-official": [
-      {
-        "scope": "user",
-        "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/aikido/1.0.0",
-        "version": "1.0.0",
-        "installedAt": "2026-04-09T07:32:54.339Z",
-        "lastUpdated": "2026-04-09T07:32:54.339Z",
-        "gitCommitSha": "d7fa8b8e192680d9a26c1a5dcaead7cf5cdb7139"
       }
     ]
   }
