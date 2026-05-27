@@ -31,160 +31,219 @@ Arguments: `$ARGUMENTS`
    git diff origin/$base...origin/<head-ref>
    ```
 
-## Phase 1.5 — Active failure-mode checklist (cite in agent prompts)
+## Phase 1.5 — Generic failure-mode guidelines (cite in agent prompts)
 
-Every agent dispatched in Phase 2 must explicitly address the patterns below
-if the diff touches code that exhibits them. These are landmines that have
-shipped to prod past previous super-reviews — caught only in live testing,
-sometimes at the cost of real funds. Include this list in each agent's
-brief and require explicit "checked / not applicable" responses.
+Nine patterns that produce hard-to-find bugs across domains (backend,
+frontend, data, infra, anywhere). Each one names the *shape* of code that
+tends to harbour the bug, *why* it's hard to spot in review, and *what to
+probe for*. They're language- and stack-agnostic — match the shape, run
+the probe.
 
-### A. Numeric precision in raw↔human conversions
+When dispatching agents, paste the entries that match the diff into each
+agent's brief and require explicit "checked / N/A" answers. A pattern
+that matches but wasn't checked is itself a high-severity finding.
 
-**Pattern:** `Number(rawString) / 10**decimals` (or the reverse with
-`parseUnits(humanNumber, decimals)`).
+### A. Precision loss in unit conversions
 
-**Landmine:** JS `Number` is 53-bit (~15 significant decimal digits). For
-tokens with ≥6 decimals representing values > ~1e9 raw units, the
-round-trip silently rounds *up*, producing on-chain amounts that exceed
-the actual balance. Reverts as "transfer amount exceeds balance" — looks
-like a balance bug, isn't.
+**Shape:** Code converts a quantity between two unit representations and
+round-trips through a lossy intermediate — typically floating-point, but
+also fixed-width integers, strings parsed back to numbers, JSON
+serialisation of bigints, etc.
 
-**Probe:** for every numeric handoff between raw and human, compute the
-worst-case loss and verify a safety factor (`× 0.9999` or smaller) is
-applied before the value crosses into a contract call.
+**Why it hides:** The conversion *looks* correct line-by-line. The loss
+is invisible at the conversion site; the symptom appears far downstream,
+often as an off-by-one in a comparison or a constraint violation.
 
-### B. Per-adapter contract verification
+**Examples:** raw token amount ↔ human-readable; bytes ↔ MB ↔ bytes;
+microseconds ↔ seconds ↔ microseconds; integer cents ↔ dollar float ↔
+cents; coordinate degrees ↔ radians ↔ degrees.
 
-**Pattern:** Code calls N external systems (DEX/bridge/CEX adapters, RPC
-providers, third-party APIs) with what looks like a uniform interface.
+**Probe:** For every numeric handoff between two unit systems, work out
+the worst-case precision loss for the maximum expected magnitude. Either
+stay in the precise representation end-to-end (BigInt / Decimal /
+arbitrary-precision string) or apply an explicit safety margin and
+comment the bound.
 
-**Landmine:** Each system has its own contract that doesn't match the
-shared signature. A recent PR passed slippage as basis-points to all
-adapters; Sushi/Allbridge/Bungee declare their own `slippageType` and
-silently misinterpret. Same shape for: response format quirks, decimal
-handling, fee-on-transfer semantics, allowance-reset requirements.
+### B. Per-integration contract verification
 
-**Probe:** if the code calls into ≥3 adapters/SDKs through a common
-interface, demand the reviewer enumerate every adapter's declared
-contract (`slippageType`, decimals, allowance semantics, …) and verify
-the calling code respects each. Don't accept "they all implement
-SwapInterface" — check the actual contract per adapter.
+**Shape:** Code calls N similar external systems through what looks like
+a uniform interface — adapters, plugins, providers, drivers, backends.
 
-### C. Pre-broadcast simulation absence
+**Why it hides:** The shared interface gives the *illusion* of uniform
+contract. Each underlying system has its own real contract (unit
+conventions, response shapes, error semantics, version quirks, idempotency
+keys, retry behaviour) that the abstraction flattens. A reviewer reads
+the calling code and sees only the abstraction.
 
-**Pattern:** Code calls `wallet.sendTransaction(...)` /
-`connection.sendRawTransaction(...)` / equivalent without a pre-flight
-`provider.call` + `provider.estimateGas` check.
+**Examples:** payment-processor adapters with different idempotency
+rules; database driver `ON CONFLICT` semantics; auth provider scope
+formats; message-broker delivery guarantees; CDN cache-purge dialects.
 
-**Landmine:** Burns gas on adapter bugs, stale routes, encoded
-deadlines-in-the-past, mis-computed `amountOutMin`, etc. EVM `eth_call`
-alone is *not* always sufficient (Alchemy has been observed to return
-empty success on txs that would actually revert) — `estimateGas` is the
-stricter check because the node must compute gas, which requires running
-the tx to completion.
+**Probe:** If the diff calls into ≥3 implementations through a shared
+abstraction, force the reviewer to enumerate the real contract of each
+implementation and verify the calling code respects all of them. Don't
+accept "they all implement X" — name the divergences.
 
-**Probe:** every broadcast site needs BOTH a `provider.call` and a
-`provider.estimateGas` pre-check before signing. Gas buffer ≥ 1.5× the
-node estimate (adapter estimates are stale by quote-broadcast lag).
+### C. Pre-action simulation / dry-run skipped
 
-### D. Async "submitted" without polling
+**Shape:** Code triggers an irreversible side effect — on-chain
+transaction, payment capture, email send, deletion, DDL, API write to a
+third-party — without first using whatever dry-run / preview / validate
+endpoint the system exposes.
 
-**Pattern:** Function persists a terminal-positive status (`submitted`,
-`executed`, `success`) from an *off-chain* or *async* submission whose
-actual completion happens later (solver fills, attestation publishes,
-cross-chain confirmation).
+**Why it hides:** The happy path works in dev. The bugs are tx-level
+(reverts), resource-level (already-deleted), or quota-level (rate
+limits) and surface only in production where the dry-run cost would
+have been negligible.
 
-**Landmine:** Audit log lies. The order silently expired / was rejected
-/ never reached the solver, but the record says it succeeded. Operator
-finds out by reconciling balances days later.
+**Examples:** EVM `eth_call` / `estimateGas` before `sendTransaction`;
+Stripe payment intent `confirm` with `simulate: true`; SQL `EXPLAIN` for
+a destructive migration; AWS `--dry-run` before applying.
 
-**Probe:** any submission that produces an `orderId` / `requestHash` /
-`vaaHash` without a corresponding source-chain `txHash` needs a poll
-loop until terminal status, with a clear "still pending after Ns"
-outcome separate from "filled". Persisted status must reflect reality.
+**Probe:** Every irreversible-action site should either invoke the
+system's dry-run mode first or document why it's safe not to. When the
+external system has both a "weak" check (`eth_call`-style) and a "strong"
+check (`estimateGas`-style), use the strong one — weak checks have
+domain-specific edge cases where they pass on actions that would fail.
 
-### E. Operator-controlled flags not respected by new code
+### D. Async submission persisted as success without verification
 
-**Pattern:** New code path operates on the same data that an existing
-flow already gates on (`enabled`, `deprecated`, `kycRequired`, …) but
-doesn't read those gates.
+**Shape:** A submission returns immediately with an id / handle / hash,
+but actual completion happens asynchronously. Code records the
+submission as "success" / "submitted" / "queued" and moves on.
 
-**Landmine:** Operators flip a provider off in the admin UI and the
-existing flow respects it — the new code still hammers the provider.
+**Why it hides:** In the happy path the async work succeeds and nobody
+notices the audit log lies. When the async work *fails* (expired,
+rejected, dropped) the record still says success — discovered by
+balance reconciliation days later.
 
-**Probe:** for every entity the new code reads, list the gating fields
-the existing flows respect and verify the new code does too. A recent PR ignored `enabled` / `deprecated` gates entirely.
+**Examples:** queued-job systems that mark "enqueued" as success;
+webhook handlers that 200-OK before the work; cross-system replication
+with eventual consistency; off-chain solver / relayer networks.
+
+**Probe:** Any function persisting a positive status from an async
+submission needs a poll-to-terminal step with a bounded timeout, plus
+distinct outcomes for *succeeded*, *terminal-failed*, and *still
+pending after budget*. The persisted status must match the on-the-wire
+reality, not the wire-up reality.
+
+### E. New code bypasses existing gates on shared data
+
+**Shape:** New feature operates on entities that existing flows already
+filter through enabled/deprecated/kycRequired/featureFlag gates. The
+new code reads the same entities but ignores the gates.
+
+**Why it hides:** Code review sees a coherent new flow; reviewer doesn't
+think to cross-check how *other* flows treat the same data. The hidden
+coupling — "we filter these entities everywhere" — isn't explicit
+anywhere.
+
+**Examples:** kill switches added for an existing endpoint that a new
+endpoint doesn't read; feature flags respected by web but not by jobs;
+soft-delete that the new code ignores; rate-limit gates absent in admin
+paths.
+
+**Probe:** For every entity the new code reads, list every gating field
+the existing similar flows respect. Verify the new code respects them
+too. If the gates are scattered across multiple consumers, propose
+centralising them so the next new consumer can't skip.
 
 ### F. Audit-trail completeness
 
-**Pattern:** Code persists a record of work done (Order, sweep leg, job
-log) without enough information to identify which provider/adapter/path
-produced the result.
+**Shape:** Code persists a record of work done — order, transaction,
+job log, event row — that doesn't carry enough information to
+reconstruct what happened from the row alone.
 
-**Landmine:** When something goes wrong in production, you can't tell
-from the persisted record which provider was involved — you have to
-re-parse logs by timestamp. Slow, error-prone, sometimes impossible
-after log rotation.
+**Why it hides:** "I'll cross-reference the logs" feels fine while
+the logs are still in hot storage. After rotation, archival, or a
+multi-day outage, the persisted record is all that's left and it
+doesn't say *who did what via which path*.
 
-**Probe:** for every persisted record, ask: "if this row alone landed
-in my inbox, would I know who to escalate to?". Required fields usually
-include: provider/adapter shortName, source/destination identifiers,
-amounts in raw + USD, txHash + orderId.
+**Examples:** order row missing the matched route / provider; job log
+missing the runner identity; webhook delivery log missing the
+correlation id; rate-limit decision missing the rule that fired.
 
-### G. DB sparsity / fallback strategies
+**Probe:** For each persisted record, ask "if this row alone landed in
+my inbox, could I tell who to escalate to and reproduce the path?".
+Required fields usually include: actor identity, target identity,
+adapter / route / version, inputs in canonical form, external ids
+(txHash, requestHash, jobId, traceId), outputs / observed result.
 
-**Pattern:** Behavior-determining read from DB (price lookup, token
-metadata, partner config) with no fallback when the row is missing.
+### G. Sparse external state drives behavior
 
-**Landmine:** dev/test DBs have far fewer rows than prod. Code that
-"works" in prod looks broken in dev because the read returns null.
-Worse: it can silently degrade in prod when the price-updater job
-hasn't run in a while.
+**Shape:** A behavior-determining read from external state (DB,
+cache, config service, feature flag store) with no fallback when the
+read returns null / empty / missing.
 
-**Probe:** every DB-backed lookup that drives behavior (dust-threshold
-classification, KYC bypass, fee routing) should have either (a) a
-hardcoded fallback for known-canonical values, or (b) an auto-populate
-step (call the price service / call `dex.createTokenFromAddress` /
-write the metadata) before failing. A recent PR silently dropped tokens because the dev DB lacked priced rows for them.
+**Why it hides:** Works in production because someone populated the
+state once. Breaks in dev/staging/fresh environments where the state
+hasn't been seeded. Worse: degrades silently in production when the
+upstream populator stops running.
 
-### H. Silent-catch-and-return-success
+**Examples:** price-feed cache missing a token → "$0" classification;
+feature-flag service missing a key → silently disabled; partner config
+absent → default fees applied; allowlist row missing → access granted.
 
-**Pattern:** `try { … } catch (err) { this.handleError(err); return { approvals: [], signatures: [] }; }` — catch swallows the error and
-returns a success-shaped empty value.
+**Probe:** Every behavior-determining lookup should have either (a) a
+hardcoded fallback for the canonical values, (b) an auto-populate step
+on miss, or (c) an explicit error rather than silently choosing a
+default. If `null` means "act as if the default", document what that
+default is and why it's safe.
 
-**Landmine:** Caller can't distinguish "no approval needed" from
-"approval threw and we hid it". Downstream code calls `swap()` with
-zero allowance → on-chain revert hours later.
+### H. Silent catch-and-return-success
 
-**Probe:** every `catch` block that returns a value (rather than
-re-throwing) needs an explicit comment explaining why the caller's
-success-path is safe. If the catch is masking a precondition violation
-(invalid input, missing data), the function should throw instead.
+**Shape:** `try { … } catch (e) { logSomething(e); return defaultShape; }` — a
+catch block that swallows the error and returns a success-shaped
+value (empty array, zero-count object, null result).
 
-### I. Cross-system live failure modes
+**Why it hides:** Callers can't distinguish "the operation correctly
+produced nothing" from "the operation failed and we hid it". The
+symptom surfaces at the next consumer — often hours later, in a
+different module, with a confusing error.
 
-**Pattern:** Code integrates with a third-party SDK / API where the
-adapter is maintained internally but the SDK quirks are external.
+**Examples:** "Invalid character" parse error swallowed in an approval
+helper → downstream swap attempts with zero allowance and reverts;
+auth-validation catch returning `{ user: null }` → endpoints treat the
+request as anonymous; cache-miss catch returning `[]` → UI shows empty
+state for a transient failure.
 
-**Landmine:** Unit tests with mocked SDK calls miss the actual SDK's
-behavior (Uniswap V4 deadline-in-past, Wormhole ephemeral signer
-dropped on serialize, Bungee solver instant-expire). These only surface
-on live broadcasts.
+**Probe:** Every catch that returns rather than re-throws needs a
+comment explaining why the caller's success path is safe when the
+catch fires. If the catch is hiding a precondition violation (bad
+input, missing dependency, malformed state), throw instead. If it's
+hiding a recoverable failure, surface the failure as a distinct shape
+(`{ ok: false, reason }`) so callers can branch.
 
-**Probe:** flag any code path where unit-test coverage exists but live
-behavior was never exercised. Require either: (a) a live integration
-test against the real SDK on a testnet, or (b) explicit documentation
-of which failure modes only surface in prod and how the cascade /
-fallthrough handles them.
+### I. Mocked tests vs live integration
+
+**Shape:** Code wraps a third-party SDK / API / framework. Unit tests
+mock the SDK; no test exercises the actual external system.
+
+**Why it hides:** Mocks reflect the abstraction the team has in their
+head, not the contract the SDK actually implements. Bugs in the gap
+between those two — SDK version quirks, undocumented response shapes,
+timing edge cases, embedded ephemeral state — only fire when the real
+SDK is in the loop.
+
+**Examples:** SDK's serialise/deserialise round-trip drops a field the
+mock preserves; the real provider rate-limits where the mock doesn't;
+the SDK's "successful" status code covers a sub-failure the mock
+doesn't model.
+
+**Probe:** For each external integration, flag whether *any* live test
+exists. If not, require either a live integration test (testnet,
+sandbox account, recorded fixture) or explicit documentation of which
+failure modes only surface in production and how the calling code
+detects / falls through.
 
 ---
 
-When dispatching agents, paste the relevant sections of this list into
-each agent's brief. Demand explicit "checked / N/A" responses for every
-landmine that applies. Failure to address any of them is a HIGH-severity
-finding on its own — the bug it represents has already cost real funds
-or real time at least once.
+A pattern matching the diff requires the reviewing agent to either:
+- Demonstrate the probe was run and the code passes, or
+- Flag the gap as a finding with appropriate severity.
+
+"Not applicable" is a valid answer when the shape truly doesn't fit.
+Silence isn't.
 
 ## Phase 2 — Dispatch parallel reviewers
 
