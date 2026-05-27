@@ -31,6 +31,161 @@ Arguments: `$ARGUMENTS`
    git diff origin/$base...origin/<head-ref>
    ```
 
+## Phase 1.5 — Active failure-mode checklist (cite in agent prompts)
+
+Every agent dispatched in Phase 2 must explicitly address the patterns below
+if the diff touches code that exhibits them. These are landmines that have
+shipped to prod past previous super-reviews — caught only in live testing,
+sometimes at the cost of real funds. Include this list in each agent's
+brief and require explicit "checked / not applicable" responses.
+
+### A. Numeric precision in raw↔human conversions
+
+**Pattern:** `Number(rawString) / 10**decimals` (or the reverse with
+`parseUnits(humanNumber, decimals)`).
+
+**Landmine:** JS `Number` is 53-bit (~15 significant decimal digits). For
+tokens with ≥6 decimals representing values > ~1e9 raw units, the
+round-trip silently rounds *up*, producing on-chain amounts that exceed
+the actual balance. Reverts as "transfer amount exceeds balance" — looks
+like a balance bug, isn't.
+
+**Probe:** for every numeric handoff between raw and human, compute the
+worst-case loss and verify a safety factor (`× 0.9999` or smaller) is
+applied before the value crosses into a contract call.
+
+### B. Per-adapter contract verification
+
+**Pattern:** Code calls N external systems (DEX/bridge/CEX adapters, RPC
+providers, third-party APIs) with what looks like a uniform interface.
+
+**Landmine:** Each system has its own contract that doesn't match the
+shared signature. A recent PR passed slippage as basis-points to all
+adapters; Sushi/Allbridge/Bungee declare their own `slippageType` and
+silently misinterpret. Same shape for: response format quirks, decimal
+handling, fee-on-transfer semantics, allowance-reset requirements.
+
+**Probe:** if the code calls into ≥3 adapters/SDKs through a common
+interface, demand the reviewer enumerate every adapter's declared
+contract (`slippageType`, decimals, allowance semantics, …) and verify
+the calling code respects each. Don't accept "they all implement
+SwapInterface" — check the actual contract per adapter.
+
+### C. Pre-broadcast simulation absence
+
+**Pattern:** Code calls `wallet.sendTransaction(...)` /
+`connection.sendRawTransaction(...)` / equivalent without a pre-flight
+`provider.call` + `provider.estimateGas` check.
+
+**Landmine:** Burns gas on adapter bugs, stale routes, encoded
+deadlines-in-the-past, mis-computed `amountOutMin`, etc. EVM `eth_call`
+alone is *not* always sufficient (Alchemy has been observed to return
+empty success on txs that would actually revert) — `estimateGas` is the
+stricter check because the node must compute gas, which requires running
+the tx to completion.
+
+**Probe:** every broadcast site needs BOTH a `provider.call` and a
+`provider.estimateGas` pre-check before signing. Gas buffer ≥ 1.5× the
+node estimate (adapter estimates are stale by quote-broadcast lag).
+
+### D. Async "submitted" without polling
+
+**Pattern:** Function persists a terminal-positive status (`submitted`,
+`executed`, `success`) from an *off-chain* or *async* submission whose
+actual completion happens later (solver fills, attestation publishes,
+cross-chain confirmation).
+
+**Landmine:** Audit log lies. The order silently expired / was rejected
+/ never reached the solver, but the record says it succeeded. Operator
+finds out by reconciling balances days later.
+
+**Probe:** any submission that produces an `orderId` / `requestHash` /
+`vaaHash` without a corresponding source-chain `txHash` needs a poll
+loop until terminal status, with a clear "still pending after Ns"
+outcome separate from "filled". Persisted status must reflect reality.
+
+### E. Operator-controlled flags not respected by new code
+
+**Pattern:** New code path operates on the same data that an existing
+flow already gates on (`enabled`, `deprecated`, `kycRequired`, …) but
+doesn't read those gates.
+
+**Landmine:** Operators flip a provider off in the admin UI and the
+existing flow respects it — the new code still hammers the provider.
+
+**Probe:** for every entity the new code reads, list the gating fields
+the existing flows respect and verify the new code does too. A recent PR ignored `enabled` / `deprecated` gates entirely.
+
+### F. Audit-trail completeness
+
+**Pattern:** Code persists a record of work done (Order, sweep leg, job
+log) without enough information to identify which provider/adapter/path
+produced the result.
+
+**Landmine:** When something goes wrong in production, you can't tell
+from the persisted record which provider was involved — you have to
+re-parse logs by timestamp. Slow, error-prone, sometimes impossible
+after log rotation.
+
+**Probe:** for every persisted record, ask: "if this row alone landed
+in my inbox, would I know who to escalate to?". Required fields usually
+include: provider/adapter shortName, source/destination identifiers,
+amounts in raw + USD, txHash + orderId.
+
+### G. DB sparsity / fallback strategies
+
+**Pattern:** Behavior-determining read from DB (price lookup, token
+metadata, partner config) with no fallback when the row is missing.
+
+**Landmine:** dev/test DBs have far fewer rows than prod. Code that
+"works" in prod looks broken in dev because the read returns null.
+Worse: it can silently degrade in prod when the price-updater job
+hasn't run in a while.
+
+**Probe:** every DB-backed lookup that drives behavior (dust-threshold
+classification, KYC bypass, fee routing) should have either (a) a
+hardcoded fallback for known-canonical values, or (b) an auto-populate
+step (call the price service / call `dex.createTokenFromAddress` /
+write the metadata) before failing. A recent PR silently dropped tokens because the dev DB lacked priced rows for them.
+
+### H. Silent-catch-and-return-success
+
+**Pattern:** `try { … } catch (err) { this.handleError(err); return { approvals: [], signatures: [] }; }` — catch swallows the error and
+returns a success-shaped empty value.
+
+**Landmine:** Caller can't distinguish "no approval needed" from
+"approval threw and we hid it". Downstream code calls `swap()` with
+zero allowance → on-chain revert hours later.
+
+**Probe:** every `catch` block that returns a value (rather than
+re-throwing) needs an explicit comment explaining why the caller's
+success-path is safe. If the catch is masking a precondition violation
+(invalid input, missing data), the function should throw instead.
+
+### I. Cross-system live failure modes
+
+**Pattern:** Code integrates with a third-party SDK / API where the
+adapter is maintained internally but the SDK quirks are external.
+
+**Landmine:** Unit tests with mocked SDK calls miss the actual SDK's
+behavior (Uniswap V4 deadline-in-past, Wormhole ephemeral signer
+dropped on serialize, Bungee solver instant-expire). These only surface
+on live broadcasts.
+
+**Probe:** flag any code path where unit-test coverage exists but live
+behavior was never exercised. Require either: (a) a live integration
+test against the real SDK on a testnet, or (b) explicit documentation
+of which failure modes only surface in prod and how the cascade /
+fallthrough handles them.
+
+---
+
+When dispatching agents, paste the relevant sections of this list into
+each agent's brief. Demand explicit "checked / N/A" responses for every
+landmine that applies. Failure to address any of them is a HIGH-severity
+finding on its own — the bug it represents has already cost real funds
+or real time at least once.
+
 ## Phase 2 — Dispatch parallel reviewers
 
 In **one** assistant turn, spawn **all applicable** agents with `Agent` tool calls:
