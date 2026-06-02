@@ -107,7 +107,7 @@ Our Claude Code usage was organically grown — manual lint after every edit, no
 - **Reason**: `pmset` is macOS-only. Linux exposes battery info via sysfs.
 
 ### zsh/.zshrc — Removed hardcoded macOS paths
-- All `/Users/raulgavris/` paths replaced with `$HOME`
+- All `$HOME/` paths replaced with `$HOME`
 - Java/Android block wrapped in `if [[ "$OSTYPE" == "darwin"* ]]` with Linux fallback for `/usr/lib/jvm/`
 - nvm: added Linux fallback (`$NVM_DIR/nvm.sh`) alongside Homebrew path
 - `brewup` alias wrapped in macOS conditional
@@ -115,7 +115,7 @@ Our Claude Code usage was organically grown — manual lint after every edit, no
 - **Reason**: Hardcoded paths broke on any machine that wasn't the original author's Mac.
 
 ### nvim/.config/nvim/lua/plugins/telescope.lua — Removed hardcoded project paths
-- Replaced `/Users/raulgavris/Projects/...` entries with `vim.fn.expand("~/Sites/")`
+- Replaced `$HOME/Projects/...` entries with `vim.fn.expand("~/Sites/")`
 - Left commented example for adding custom project directories
 - **Reason**: Hardcoded paths caused "not accessible by the current user" errors on other machines.
 

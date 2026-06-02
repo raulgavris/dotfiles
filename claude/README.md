@@ -26,8 +26,6 @@ Portable global Claude Code configuration: slash commands, subagents, and produc
 ├── skills/
 │   ├── migrate-windows-games-to-proton/ # Port Windows-side games (GOG/repacks/standalone)
 │   │                                    # and their saves into Steam+Proton on Linux
-│   └── houdiniswap.md         # Personal crypto swap agent skill (safe to remove)
-├── mcp-coding.template.json         # Ad-hoc MCP preset template (context7 + houdini-monitoring)
 ├── mcp-coding-minimal.template.json # Ad-hoc MCP preset template (context7 only)
 └── settings.template.json     # Hook registrations, merged into your ~/.claude/settings.json by install.sh
 
@@ -77,18 +75,14 @@ Tracked as templates because they carry a token placeholder. They are **not** lo
 First-time setup on a new machine:
 
 ```bash
-envsubst < ~/.claude/mcp-coding.template.json > ~/.claude/mcp-coding.json
 cp ~/.claude/mcp-coding-minimal.template.json ~/.claude/mcp-coding-minimal.json
 ```
 
 Then use with:
 
 ```bash
-claude --mcp-config ~/.claude/mcp-coding.json          # context7 + houdini-monitoring
 claude --mcp-config ~/.claude/mcp-coding-minimal.json  # context7 only
 ```
-
-`mcp-coding.template.json` expects `HOUDINI_MONITORING_TOKEN` in the environment (set it in `~/.zshrc.local`). The rendered `mcp-coding.json` lives outside the stow package, so it won't be tracked or clobbered.
 
 ## Hook behavior
 

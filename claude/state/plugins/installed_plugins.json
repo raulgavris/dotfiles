@@ -33,15 +33,6 @@
     ],
     "frontend-design@claude-plugins-official": [
       {
-        "scope": "project",
-        "projectPath": "__HOME__/Sites/houdini/houdiniswap-backend",
-        "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
-        "version": "unknown",
-        "installedAt": "2026-01-28T12:03:48.585Z",
-        "lastUpdated": "2026-04-16T15:36:11.685Z",
-        "gitCommitSha": "e30768372b4150ca1bc0839d93283e8edc30d60d"
-      },
-      {
         "scope": "user",
         "installPath": "__HOME__/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
         "version": "unknown",

@@ -31,6 +31,220 @@ Arguments: `$ARGUMENTS`
    git diff origin/$base...origin/<head-ref>
    ```
 
+## Phase 1.5 — Generic failure-mode guidelines (cite in agent prompts)
+
+Nine patterns that produce hard-to-find bugs across domains (backend,
+frontend, data, infra, anywhere). Each one names the *shape* of code that
+tends to harbour the bug, *why* it's hard to spot in review, and *what to
+probe for*. They're language- and stack-agnostic — match the shape, run
+the probe.
+
+When dispatching agents, paste the entries that match the diff into each
+agent's brief and require explicit "checked / N/A" answers. A pattern
+that matches but wasn't checked is itself a high-severity finding.
+
+### A. Precision loss in unit conversions
+
+**Shape:** Code converts a quantity between two unit representations and
+round-trips through a lossy intermediate — typically floating-point, but
+also fixed-width integers, strings parsed back to numbers, JSON
+serialisation of bigints, etc.
+
+**Why it hides:** The conversion *looks* correct line-by-line. The loss
+is invisible at the conversion site; the symptom appears far downstream,
+often as an off-by-one in a comparison or a constraint violation.
+
+**Examples:** raw token amount ↔ human-readable; bytes ↔ MB ↔ bytes;
+microseconds ↔ seconds ↔ microseconds; integer cents ↔ dollar float ↔
+cents; coordinate degrees ↔ radians ↔ degrees.
+
+**Probe:** For every numeric handoff between two unit systems, work out
+the worst-case precision loss for the maximum expected magnitude. Either
+stay in the precise representation end-to-end (BigInt / Decimal /
+arbitrary-precision string) or apply an explicit safety margin and
+comment the bound.
+
+### B. Per-integration contract verification
+
+**Shape:** Code calls N similar external systems through what looks like
+a uniform interface — adapters, plugins, providers, drivers, backends.
+
+**Why it hides:** The shared interface gives the *illusion* of uniform
+contract. Each underlying system has its own real contract (unit
+conventions, response shapes, error semantics, version quirks, idempotency
+keys, retry behaviour) that the abstraction flattens. A reviewer reads
+the calling code and sees only the abstraction.
+
+**Examples:** payment-processor adapters with different idempotency
+rules; database driver `ON CONFLICT` semantics; auth provider scope
+formats; message-broker delivery guarantees; CDN cache-purge dialects.
+
+**Probe:** If the diff calls into ≥3 implementations through a shared
+abstraction, force the reviewer to enumerate the real contract of each
+implementation and verify the calling code respects all of them. Don't
+accept "they all implement X" — name the divergences.
+
+### C. Pre-action simulation / dry-run skipped
+
+**Shape:** Code triggers an irreversible side effect — on-chain
+transaction, payment capture, email send, deletion, DDL, API write to a
+third-party — without first using whatever dry-run / preview / validate
+endpoint the system exposes.
+
+**Why it hides:** The happy path works in dev. The bugs are tx-level
+(reverts), resource-level (already-deleted), or quota-level (rate
+limits) and surface only in production where the dry-run cost would
+have been negligible.
+
+**Examples:** EVM `eth_call` / `estimateGas` before `sendTransaction`;
+Stripe payment intent `confirm` with `simulate: true`; SQL `EXPLAIN` for
+a destructive migration; AWS `--dry-run` before applying.
+
+**Probe:** Every irreversible-action site should either invoke the
+system's dry-run mode first or document why it's safe not to. When the
+external system has both a "weak" check (`eth_call`-style) and a "strong"
+check (`estimateGas`-style), use the strong one — weak checks have
+domain-specific edge cases where they pass on actions that would fail.
+
+### D. Async submission persisted as success without verification
+
+**Shape:** A submission returns immediately with an id / handle / hash,
+but actual completion happens asynchronously. Code records the
+submission as "success" / "submitted" / "queued" and moves on.
+
+**Why it hides:** In the happy path the async work succeeds and nobody
+notices the audit log lies. When the async work *fails* (expired,
+rejected, dropped) the record still says success — discovered by
+balance reconciliation days later.
+
+**Examples:** queued-job systems that mark "enqueued" as success;
+webhook handlers that 200-OK before the work; cross-system replication
+with eventual consistency; off-chain solver / relayer networks.
+
+**Probe:** Any function persisting a positive status from an async
+submission needs a poll-to-terminal step with a bounded timeout, plus
+distinct outcomes for *succeeded*, *terminal-failed*, and *still
+pending after budget*. The persisted status must match the on-the-wire
+reality, not the wire-up reality.
+
+### E. New code bypasses existing gates on shared data
+
+**Shape:** New feature operates on entities that existing flows already
+filter through enabled/deprecated/kycRequired/featureFlag gates. The
+new code reads the same entities but ignores the gates.
+
+**Why it hides:** Code review sees a coherent new flow; reviewer doesn't
+think to cross-check how *other* flows treat the same data. The hidden
+coupling — "we filter these entities everywhere" — isn't explicit
+anywhere.
+
+**Examples:** kill switches added for an existing endpoint that a new
+endpoint doesn't read; feature flags respected by web but not by jobs;
+soft-delete that the new code ignores; rate-limit gates absent in admin
+paths.
+
+**Probe:** For every entity the new code reads, list every gating field
+the existing similar flows respect. Verify the new code respects them
+too. If the gates are scattered across multiple consumers, propose
+centralising them so the next new consumer can't skip.
+
+### F. Audit-trail completeness
+
+**Shape:** Code persists a record of work done — order, transaction,
+job log, event row — that doesn't carry enough information to
+reconstruct what happened from the row alone.
+
+**Why it hides:** "I'll cross-reference the logs" feels fine while
+the logs are still in hot storage. After rotation, archival, or a
+multi-day outage, the persisted record is all that's left and it
+doesn't say *who did what via which path*.
+
+**Examples:** order row missing the matched route / provider; job log
+missing the runner identity; webhook delivery log missing the
+correlation id; rate-limit decision missing the rule that fired.
+
+**Probe:** For each persisted record, ask "if this row alone landed in
+my inbox, could I tell who to escalate to and reproduce the path?".
+Required fields usually include: actor identity, target identity,
+adapter / route / version, inputs in canonical form, external ids
+(txHash, requestHash, jobId, traceId), outputs / observed result.
+
+### G. Sparse external state drives behavior
+
+**Shape:** A behavior-determining read from external state (DB,
+cache, config service, feature flag store) with no fallback when the
+read returns null / empty / missing.
+
+**Why it hides:** Works in production because someone populated the
+state once. Breaks in dev/staging/fresh environments where the state
+hasn't been seeded. Worse: degrades silently in production when the
+upstream populator stops running.
+
+**Examples:** price-feed cache missing a token → "$0" classification;
+feature-flag service missing a key → silently disabled; partner config
+absent → default fees applied; allowlist row missing → access granted.
+
+**Probe:** Every behavior-determining lookup should have either (a) a
+hardcoded fallback for the canonical values, (b) an auto-populate step
+on miss, or (c) an explicit error rather than silently choosing a
+default. If `null` means "act as if the default", document what that
+default is and why it's safe.
+
+### H. Silent catch-and-return-success
+
+**Shape:** `try { … } catch (e) { logSomething(e); return defaultShape; }` — a
+catch block that swallows the error and returns a success-shaped
+value (empty array, zero-count object, null result).
+
+**Why it hides:** Callers can't distinguish "the operation correctly
+produced nothing" from "the operation failed and we hid it". The
+symptom surfaces at the next consumer — often hours later, in a
+different module, with a confusing error.
+
+**Examples:** "Invalid character" parse error swallowed in an approval
+helper → downstream swap attempts with zero allowance and reverts;
+auth-validation catch returning `{ user: null }` → endpoints treat the
+request as anonymous; cache-miss catch returning `[]` → UI shows empty
+state for a transient failure.
+
+**Probe:** Every catch that returns rather than re-throws needs a
+comment explaining why the caller's success path is safe when the
+catch fires. If the catch is hiding a precondition violation (bad
+input, missing dependency, malformed state), throw instead. If it's
+hiding a recoverable failure, surface the failure as a distinct shape
+(`{ ok: false, reason }`) so callers can branch.
+
+### I. Mocked tests vs live integration
+
+**Shape:** Code wraps a third-party SDK / API / framework. Unit tests
+mock the SDK; no test exercises the actual external system.
+
+**Why it hides:** Mocks reflect the abstraction the team has in their
+head, not the contract the SDK actually implements. Bugs in the gap
+between those two — SDK version quirks, undocumented response shapes,
+timing edge cases, embedded ephemeral state — only fire when the real
+SDK is in the loop.
+
+**Examples:** SDK's serialise/deserialise round-trip drops a field the
+mock preserves; the real provider rate-limits where the mock doesn't;
+the SDK's "successful" status code covers a sub-failure the mock
+doesn't model.
+
+**Probe:** For each external integration, flag whether *any* live test
+exists. If not, require either a live integration test (testnet,
+sandbox account, recorded fixture) or explicit documentation of which
+failure modes only surface in production and how the calling code
+detects / falls through.
+
+---
+
+A pattern matching the diff requires the reviewing agent to either:
+- Demonstrate the probe was run and the code passes, or
+- Flag the gap as a finding with appropriate severity.
+
+"Not applicable" is a valid answer when the shape truly doesn't fit.
+Silence isn't.
+
 ## Phase 2 — Dispatch parallel reviewers
 
 In **one** assistant turn, spawn **all applicable** agents with `Agent` tool calls:

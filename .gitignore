@@ -39,3 +39,7 @@ claude/.claude/statsig/
 claude/.claude/**/*.bak*
 claude/.claude/**/security_warnings_state_*
 claude/.claude/**/limitline-*
+
+# Private (not portable) — kept locally, not tracked.
+claude/.claude/skills/houdiniswap.md
+claude/.claude/mcp-coding.template.json
