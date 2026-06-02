@@ -132,6 +132,11 @@ fi
 # zoxide — smarter cd. `cd term` jumps to most-frecent dir matching "term".
 # Must be initialized near the end so the alias isn't overwritten by later sourcing.
 if command -v zoxide &>/dev/null; then
+  # Silence zoxide's doctor. Non-interactive shells that restore a captured
+  # snapshot (e.g. Claude Code's Bash tool) bring back zoxide's functions and the
+  # `cd`→`z` alias but NOT the chpwd_functions array, so the doctor false-positives
+  # on every `cd`. The interactive config is correct; the check only adds noise.
+  export _ZO_DOCTOR=0
   eval "$(zoxide init zsh)"
   alias cd='z'
 fi
