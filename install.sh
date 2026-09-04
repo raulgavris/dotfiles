@@ -32,8 +32,10 @@ detect_os() {
             . /etc/os-release
             if [[ "$ID" == "ubuntu" || "$ID" == "debian" || "$ID_LIKE" == *"debian"* ]]; then
                 OS="linux"
+            elif [[ "$ID" == "arch" || "$ID" == "cachyos" || "$ID_LIKE" == *"arch"* ]]; then
+                OS="arch"
             else
-                print_error "Unsupported Linux distribution: $ID. Only Ubuntu/Debian are supported."
+                print_error "Unsupported Linux distribution: $ID. Supported: Ubuntu/Debian, Arch/CachyOS."
                 exit 1
             fi
         else
@@ -335,10 +337,77 @@ if [ "$OS" = "linux" ]; then
     fi
 
     # GNOME keyboard settings (Super/Win keys act as Ctrl for macOS-style shortcuts)
-    if command -v gsettings &>/dev/null; then
+    # Only meaningful under GNOME — gsettings also exists on KDE systems, where these
+    # org.gnome.* keys are inert at best.
+    if command -v gsettings &>/dev/null && [[ "$XDG_CURRENT_DESKTOP" == *"GNOME"* ]]; then
         print_info "Configuring GNOME keyboard settings (Super → Ctrl)..."
         gsettings set org.gnome.desktop.input-sources xkb-options "['altwin:ctrl_win']"
         print_success "Super/Win keys now act as Ctrl (macOS-style)"
+    fi
+
+    # peon-ping (sound effects + notifications for Claude Code)
+    print_info "Installing peon-ping..."
+    if ! command -v peon &>/dev/null; then
+        curl -fsSL https://raw.githubusercontent.com/PeonPing/peon-ping/main/install.sh | bash
+        print_success "peon-ping installed"
+    else
+        print_success "peon-ping already installed"
+    fi
+fi
+
+# ============================================
+# Arch / CachyOS: everything the Ubuntu path builds from source is a repo package
+# ============================================
+if [ "$OS" = "arch" ]; then
+    print_header "📦 Installing Packages (pacman)"
+
+    # Note vs. the Ubuntu path above: neovim needs no PPA; go, lazygit, yazi,
+    # superfile, zoxide, fnm, pyenv and ghostty are all packaged, so none of the
+    # tarball / curl-pipe installers are needed here. Package name differences:
+    # fd-find→fd, build-essential→base-devel, poppler-utils→poppler, p7zip-full→7zip.
+    print_info "Installing CLI tools..."
+    sudo pacman -S --needed --noconfirm \
+        cowsay \
+        fd \
+        fortune-mod \
+        fzf \
+        lolcat \
+        tig \
+        tmux \
+        stow \
+        ripgrep \
+        zsh \
+        curl \
+        git \
+        xclip \
+        wl-clipboard \
+        base-devel \
+        ffmpeg \
+        jq \
+        poppler \
+        imagemagick \
+        7zip \
+        unzip \
+        neovim \
+        go \
+        lazygit \
+        zoxide \
+        yazi \
+        superfile \
+        fnm \
+        pyenv \
+        ghostty
+
+    print_success "pacman packages installed"
+
+    # Oh My Posh — the only tool here with no official Arch package.
+    # Its installer is userspace (~/.local/bin), no sudo required.
+    print_info "Installing Oh My Posh..."
+    if ! command -v oh-my-posh &>/dev/null; then
+        curl -s https://ohmyposh.dev/install.sh | bash -s
+        print_success "Oh My Posh installed"
+    else
+        print_success "Oh My Posh already installed"
     fi
 
     # peon-ping (sound effects + notifications for Claude Code)
