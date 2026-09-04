@@ -421,6 +421,71 @@ if [ "$OS" = "arch" ]; then
 fi
 
 # ============================================
+# Node.js runtime (Linux: fnm only installs the manager, not a runtime)
+# ============================================
+# macOS gets node from the Brewfile. On Linux both package stages install fnm
+# but no Node version, so `node` does not exist until one is installed here.
+if [ "$OS" = "linux" ] || [ "$OS" = "arch" ]; then
+    print_header "⬢ Installing Node.js"
+
+    export FNM_DIR="${FNM_DIR:-$HOME/.local/share/fnm}"
+    if command -v fnm &>/dev/null; then
+        eval "$(fnm env)" 2>/dev/null || true
+
+        if [ -z "$(fnm list 2>/dev/null | grep -v system)" ]; then
+            print_info "Installing Node LTS via fnm..."
+            fnm install --lts
+            fnm default lts-latest
+            print_success "Node $(fnm current 2>/dev/null) installed and set as default"
+        else
+            print_success "Node already installed via fnm ($(fnm current 2>/dev/null))"
+        fi
+
+        # `fnm env` only puts node on PATH for shells that evaluate it. Hooks and
+        # other non-login processes (Claude Code plugin hooks run under /bin/sh)
+        # inherit a bare PATH and would not find node at all. Symlink through the
+        # stable `aliases/default` path — it follows whatever `fnm default` points
+        # at, so version switches keep working, and an active `fnm env` still wins
+        # because its multishell dir comes earlier on PATH.
+        FNM_DEFAULT_BIN="$FNM_DIR/aliases/default/bin"
+        if [ -d "$FNM_DEFAULT_BIN" ]; then
+            mkdir -p "$HOME/.local/bin"
+            for b in node npm npx; do
+                [ -e "$FNM_DEFAULT_BIN/$b" ] && ln -sfn "$FNM_DEFAULT_BIN/$b" "$HOME/.local/bin/$b"
+            done
+            print_success "node/npm/npx linked into ~/.local/bin (available to hooks)"
+        fi
+    else
+        print_warning "fnm not found — skipping Node install"
+    fi
+fi
+
+# ============================================
+# npm globals (statusline dependency)
+# ============================================
+if command -v npm &>/dev/null || [ -x "$HOME/.local/bin/npm" ]; then
+    export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
+
+    # Keep globals outside the versioned node dir so they survive `fnm` upgrades.
+    # This is the path the statusline in claude/settings.json expects.
+    if [ "$(npm config get prefix)" != "$HOME/.npm-global" ]; then
+        npm config set prefix "$HOME/.npm-global"
+        print_success "npm prefix set to ~/.npm-global"
+    fi
+
+    # claude-limitline backs the Claude Code statusline; without it the status
+    # bar silently renders nothing.
+    if ! command -v claude-limitline &>/dev/null; then
+        print_info "Installing claude-limitline..."
+        npm install -g claude-limitline >/dev/null 2>&1 \
+            && print_success "claude-limitline installed" \
+            || print_warning "claude-limitline install failed"
+    else
+        print_success "claude-limitline already installed"
+    fi
+fi
+
+# ============================================
 # Backup existing configs
 # ============================================
 print_header "💾 Backing Up Existing Configs"
