@@ -30,9 +30,11 @@ Your prefix is: **`Ctrl-a`** (not the default `Ctrl-b`)
 
 | Key | Action | Description |
 |-----|--------|-------------|
-| `prefix` + `c` | New Window | Creates new window in current directory |
+| `prefix` + `n` | New Window | Creates new window in current directory |
 | `prefix` + `,` | Rename Window | Rename current window |
 | `prefix` + `w` | Window List | Show all windows across all sessions |
+| `Alt-Tab` | Next Window | Cycle to next window (no prefix needed) |
+| `Alt-Shift-Tab` | Previous Window | Cycle to previous window (no prefix needed) |
 | `Alt-1` to `Alt-5` | Jump to Window | Quick jump to window 1-5 |
 | `prefix` + `<` | Swap Left | Move window left |
 | `prefix` + `>` | Swap Right | Move window right |
@@ -605,7 +607,7 @@ prefix + Ctrl-r
 | **Scripts** | `~/.tmux/*.sh` |
 | **Plugins** | `~/.tmux/plugins/` |
 | **Saves** | `~/.local/share/tmux/resurrect/` |
-| **This Guide** | `~/Projects/dotfiles/tmux/TMUX_GUIDE.md` |
+| **This Guide** | `~/Sites/dotfiles/tmux/TMUX_GUIDE.md` |
 
 ---
 
@@ -614,12 +616,11 @@ prefix + Ctrl-r
 1. **TPM** - Tmux Plugin Manager
 2. **resurrect** - Manual save/restore
 3. **continuum** - Auto save/restore
-4. **themepack** - Theme collection
-5. **vim-tmux-navigator** - Seamless vim/tmux pane navigation
-6. **onedark-theme** - Current active theme
-7. **tmux-yank** - Better clipboard integration
-8. **tmux-fzf** - Additional fzf integrations
-9. **tmux-prefix-highlight** - Shows when prefix/copy/sync mode is active
+4. **vim-tmux-navigator** - Seamless vim/tmux pane navigation
+5. **onedark-theme** - Current active theme
+6. **tmux-yank** - Better clipboard integration
+7. **tmux-fzf** - Additional fzf integrations
+8. **tmux-prefix-highlight** - Shows when prefix/copy/sync mode is active
 
 ---
 
@@ -725,7 +726,7 @@ Press `prefix` + `N` for instant scratch pad:
 ### **Keyboard Shortcuts Muscle Memory:**
 
 - **Session:** `prefix` + `s` (switch) or `f` (new workspace)
-- **Window:** `Alt-1` through `Alt-5` (quick jump to windows)
+- **Window:** `Alt-Tab`/`Alt-Shift-Tab` (cycle), `Alt-1` through `Alt-5` (jump)
 - **Panes:** `Ctrl-h/j/k/l` (navigate), `prefix` + `|/-` (split)
 - **Resize:** `Ctrl` + arrows (no prefix!)
 - **Copy:** `prefix` + `[` (enter), `v` (select), `y` (copy)
@@ -742,7 +743,7 @@ Press `prefix` + `N` for instant scratch pad:
 - [Tmux Cheat Sheet](https://tmuxcheatsheet.com/)
 - [Resurrect GitHub](https://github.com/tmux-plugins/tmux-resurrect)
 - [Continuum GitHub](https://github.com/tmux-plugins/tmux-continuum)
-- [Your Dotfiles](~/Projects/dotfiles/)
+- [Your Dotfiles](~/Sites/dotfiles/)
 
 ---
 

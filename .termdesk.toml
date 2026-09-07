@@ -1,0 +1,9 @@
+# Termdesk project configuration
+# Project: dotfiles
+
+# Uncomment to add auto-start commands:
+# [[autostart]]
+# command = "your-command"
+# args = []
+# directory = "."
+# title = "Window Title"

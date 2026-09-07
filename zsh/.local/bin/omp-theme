@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# Oh My Posh theme picker with live preview
+# Tab cycles filter: All → Single line → Multi line
+# Usage: omp-theme
+
+set -e
+
+# Find themes directory
+POSH_THEMES=""
+for dir in \
+    "${HOME}/.cache/oh-my-posh/themes" \
+    "/usr/local/share/oh-my-posh/themes" \
+    "$(brew --prefix oh-my-posh 2>/dev/null)/themes"; do
+    if [ -d "$dir" ]; then
+        POSH_THEMES="$dir"
+        break
+    fi
+done
+
+if [ -z "$POSH_THEMES" ]; then
+    echo "Error: Could not find Oh My Posh themes directory."
+    echo "Make sure oh-my-posh is installed."
+    exit 1
+fi
+
+if ! command -v fzf &>/dev/null; then
+    echo "Error: fzf is required for the theme picker."
+    exit 1
+fi
+
+# Get current theme name for highlighting
+current=""
+if [ -f "$HOME/.ohmyposh.omp.json" ]; then
+    for f in "$POSH_THEMES"/*.omp.json "$POSH_THEMES"/*.omp.yaml "$POSH_THEMES"/*.omp.toml; do
+        [ -f "$f" ] || continue
+        if diff -q "$f" "$HOME/.ohmyposh.omp.json" &>/dev/null; then
+            current="$(basename "$f" | sed -E 's/\.omp\.(json|yaml|toml)$//')"
+            break
+        fi
+    done
+fi
+
+# Build theme lists: all, single-line, multi-line
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT
+
+tmp_all="$tmp_dir/all"
+tmp_single="$tmp_dir/single"
+tmp_multi="$tmp_dir/multi"
+
+# Get all theme names
+ls "$POSH_THEMES"/*.omp.* 2>/dev/null | \
+    xargs -I{} basename {} | \
+    sed -E 's/\.omp\.(json|yaml|toml)$//' | \
+    sort -u > "$tmp_all"
+
+# Classify: multi-line themes contain "newline" block type
+> "$tmp_single"
+> "$tmp_multi"
+while IFS= read -r theme; do
+    theme_file=""
+    for ext in json yaml toml; do
+        if [ -f "$POSH_THEMES/$theme.omp.$ext" ]; then
+            theme_file="$POSH_THEMES/$theme.omp.$ext"
+            break
+        fi
+    done
+    if [ -n "$theme_file" ] && grep -qE '"newline"|type: newline|type = "newline"' "$theme_file" 2>/dev/null; then
+        echo "$theme" >> "$tmp_multi"
+    else
+        echo "$theme" >> "$tmp_single"
+    fi
+done < "$tmp_all"
+
+# Helper script for Tab cycling (works with all fzf versions)
+cat > "$tmp_dir/cycle.sh" << 'CYCLE'
+#!/usr/bin/env bash
+dir="$1"
+state=$(cat "$dir/state" 2>/dev/null || echo "all")
+case "$state" in
+    all)
+        echo "single" > "$dir/state"
+        echo "── Filter: Single line ──"
+        cat "$dir/single"
+        ;;
+    single)
+        echo "multi" > "$dir/state"
+        echo "── Filter: Multi line ──"
+        cat "$dir/multi"
+        ;;
+    *)
+        echo "all" > "$dir/state"
+        echo "── Filter: All themes ──"
+        cat "$dir/all"
+        ;;
+esac
+CYCLE
+chmod +x "$tmp_dir/cycle.sh"
+
+# Initial state
+echo "all" > "$tmp_dir/state"
+
+# Launch fzf with Tab to cycle filter via header-lines
+selected=$({ echo "── Filter: All themes ──"; cat "$tmp_all"; } | \
+    fzf \
+        --height=90% \
+        --layout=reverse \
+        --border=rounded \
+        --ansi \
+        --header="Current: ${current:-default} | Tab: filter | ↑↓ Navigate | Enter Select | Esc Cancel" \
+        --header-lines=1 \
+        --prompt="Theme > " \
+        --preview="oh-my-posh print primary --config '${POSH_THEMES}/{}.omp.json' --shell plain 2>/dev/null || oh-my-posh print primary --config '${POSH_THEMES}/{}.omp.yaml' --shell plain 2>/dev/null || oh-my-posh print primary --config '${POSH_THEMES}/{}.omp.toml' --shell plain 2>/dev/null || echo 'Preview not available'" \
+        --preview-window=down:3:wrap \
+        --bind "tab:reload($tmp_dir/cycle.sh $tmp_dir)" \
+) || true
+
+if [ -n "$selected" ]; then
+    theme_file=""
+    for ext in json yaml toml; do
+        if [ -f "$POSH_THEMES/$selected.omp.$ext" ]; then
+            theme_file="$POSH_THEMES/$selected.omp.$ext"
+            break
+        fi
+    done
+
+    if [ -n "$theme_file" ]; then
+        cp "$theme_file" "$HOME/.ohmyposh.omp.json"
+        echo "Theme set to: $selected"
+        exec zsh
+    else
+        echo "Error: Theme file not found for '$selected'"
+        exit 1
+    fi
+else
+    echo "No theme selected."
+fi

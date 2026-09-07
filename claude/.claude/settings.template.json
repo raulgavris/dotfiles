@@ -1,0 +1,43 @@
+{
+  "_comment": "Template for ~/.claude/settings.json — hook registrations only. install.sh merges this into your existing settings.json via jq, preserving your permissions, plugins, statusLine, and anything else already there. If you already have hooks with the same command path, this will NOT duplicate them. statusLine is NOT defined here — it is set up once by the statusline-setup agent and lives only in the live settings.json.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/autoformat/autoformat.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/secret-guard/guard.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/verify-reminder/reminder.sh",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
