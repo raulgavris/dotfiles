@@ -29,13 +29,10 @@ return {
 		-- Enable inlay hints globally (parameter names, inferred types)
 		vim.lsp.inlay_hint.enable(true)
 
-		-- Enable code lens globally
-		vim.lsp.codelens.refresh()
-		vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
-			callback = function()
-				pcall(vim.lsp.codelens.refresh)
-			end,
-		})
+		-- Enable code lens globally. vim.lsp.codelens.enable handles auto-refresh
+		-- on its own, so no BufEnter/InsertLeave autocmd is needed.
+		-- (Neovim 0.12 deprecated vim.lsp.codelens.refresh() in favor of enable().)
+		vim.lsp.codelens.enable(true)
 
 		-- Global config for all LSP servers
 		vim.lsp.config("*", {
@@ -91,9 +88,39 @@ return {
 			},
 		})
 
-		-- ESLint for React/Node projects
+		-- ESLint for React/Node projects.
+		-- Only attach when an ESLint config exists AND the eslint library is
+		-- actually installed in node_modules — otherwise the server errors with
+		-- "Unable to find ESLint library" in Biome-only projects or projects
+		-- with a stale eslint.config.js left over from a Biome migration.
 		vim.lsp.config("eslint", {
 			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+			root_dir = function(bufnr, on_dir)
+				local fname = vim.api.nvim_buf_get_name(bufnr)
+				local config_root = vim.fs.root(fname, {
+					".eslintrc",
+					".eslintrc.js",
+					".eslintrc.cjs",
+					".eslintrc.yaml",
+					".eslintrc.yml",
+					".eslintrc.json",
+					"eslint.config.js",
+					"eslint.config.mjs",
+					"eslint.config.cjs",
+					"eslint.config.ts",
+					"eslint.config.mts",
+					"eslint.config.cts",
+				})
+				if not config_root then
+					return
+				end
+				-- Walk up from config_root to find node_modules/eslint (handles hoisted monorepos).
+				local lib = vim.fs.find("node_modules/eslint", { path = config_root, upward = true, type = "directory" })[1]
+				if not lib then
+					return
+				end
+				on_dir(config_root)
+			end,
 			settings = {
 				workingDirectories = { mode = "auto" },
 			},

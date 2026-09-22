@@ -64,7 +64,6 @@ return {
 			"dockerfile",
 			-- Config files
 			"json",
-			"jsonc",
 			"yaml",
 			"toml",
 			"xml",
@@ -95,6 +94,9 @@ return {
 		-- Auto-install parser + enable highlighting per filetype
 		vim.api.nvim_create_autocmd("FileType", {
 			callback = function(args)
+				if vim.bo[args.buf].buftype ~= "" then
+					return
+				end
 				if is_bigfile(args.buf) then
 					return
 				end

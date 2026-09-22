@@ -5,6 +5,9 @@ return {
 		local rainbow_delimiters = require("rainbow-delimiters")
 
 		vim.g.rainbow_delimiters = {
+			condition = function(bufnr)
+				return vim.bo[bufnr].buftype == ""
+			end,
 			strategy = {
 				[""] = rainbow_delimiters.strategy["global"],
 			},
