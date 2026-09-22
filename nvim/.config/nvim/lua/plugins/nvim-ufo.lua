@@ -1,5 +1,6 @@
 return {
 	"kevinhwang91/nvim-ufo",
+	event = "BufReadPost",
 	dependencies = {
 		"kevinhwang91/promise-async",
 		{
@@ -14,12 +15,14 @@ return {
 						{ text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
 					},
 				})
-				require("ufo").setup({
-					provider_selector = function(bufnr, filetype, buftype)
-						return { "treesitter", "indent" }
-					end,
-				})
 			end,
 		},
 	},
+	config = function()
+		require("ufo").setup({
+			provider_selector = function()
+				return { "treesitter", "indent" }
+			end,
+		})
+	end,
 }

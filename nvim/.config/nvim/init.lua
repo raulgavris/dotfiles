@@ -9,10 +9,11 @@ else
 	require("core")
 	require("pluginsloader")
 
-	-- Check for theme configuration
-	-- Theme configs are can be found on lua/plugins/theme
-	pcall(require, "plugins.theme." .. name)
+	-- Theme configs in lua/plugins/theme/
+	local ok, err = pcall(require, "plugins.theme." .. name)
+	if not ok then
+		vim.notify("Theme config failed: " .. tostring(err), vim.log.levels.WARN)
+	end
 
-	-- Set the theme
 	vim.cmd.colorscheme(name)
 end

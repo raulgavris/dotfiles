@@ -9,7 +9,12 @@ return {
 		require("noice").setup({
 			cmdline = {
 				format = {
-					cmdline = { pattern = "^:", icon = "_" },
+					cmdline = { pattern = "^:", icon = "_", lang = "" },
+					search_down = { lang = "" },
+					search_up = { lang = "" },
+					filter = { lang = "" },
+					lua = { lang = "" },
+					help = { lang = "" },
 				},
 			},
 			views = {

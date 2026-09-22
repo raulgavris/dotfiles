@@ -15,53 +15,49 @@ return {
 		local cmp = require("cmp")
 		local luasnip = require("luasnip")
 
-		require("luasnip.loaders.from_snipmate").lazy_load({
-			paths = vim.fn.stdpath("config") .. "/snippets/snipmate",
-		})
 		require("luasnip.loaders.from_vscode").lazy_load()
-		-- require("luasnip.loaders.from_vscode").lazy_load { paths = vim.fn.stdpath "config" .. "/snippets/vscode" }
 
 		local kind_icons = {
 			Text = "󰉿",
-			Table = "",
+			Table = "",
 			Method = "󰆧",
 			Function = "󰊕",
-			Constructor = "",
+			Constructor = "",
 			Field = "󰜢",
 			Variable = "󰀫",
 			Class = "󰠱",
-			Interface = "",
-			Module = "",
+			Interface = "",
+			Module = "",
 			Property = "󰜢",
 			Unit = "󰑭",
 			Value = "󰎠",
-			Enum = "",
+			Enum = "",
 			Keyword = "󰌋",
-			Snippet = "",
+			Snippet = "",
 			Color = "󰏘",
 			File = "󰈙",
 			Reference = "󰈇",
 			Folder = "󰉋",
-			EnumMember = "",
+			EnumMember = "",
 			Constant = "󰏿",
 			Struct = "󰙅",
-			Event = "",
+			Event = "",
 			Operator = "󰆕",
 			TypeParameter = "",
-			Package = "",
-			Calendar = "",
-			Tag = "",
-		Null = "󰟢",
-		Codeium = "",
-	}
+			Package = "",
+			Calendar = "",
+			Tag = "",
+			Null = "󰟢",
+			Codeium = "",
+		}
 
-	cmp.setup({
+		cmp.setup({
 			completion = {
 				completeopt = "menu,menuone,noselect",
 			},
 			snippet = {
 				expand = function(args)
-					luasnip.lsp_expand(args.body) -- For `luasnip` users.
+					luasnip.lsp_expand(args.body)
 				end,
 			},
 
@@ -75,16 +71,12 @@ return {
 					i = cmp.mapping.abort(),
 					c = cmp.mapping.close(),
 				}),
-				-- Accept currently selected item. If none selected, `select` first item.
-				-- Set `select` to `false` to only confirm explicitly selected items.
 				["<CR>"] = cmp.mapping.confirm({
 					select = false,
 				}),
 				["<Tab>"] = cmp.mapping(function(fallback)
 					if cmp.visible() then
 						cmp.select_next_item()
-					elseif luasnip.expandable() then
-						luasnip.expand()
 					elseif luasnip.expand_or_jumpable() then
 						luasnip.expand_or_jump()
 					else
@@ -107,14 +99,14 @@ return {
 					return vim_item
 				end,
 			},
-		sources = {
-			{ name = "nvim_lsp", priority = 1000 },
-			{ name = "codeium", priority = 750 },
-			{ name = "luasnip", priority = 500 },
-			{ name = "nvim_lua", priority = 400 },
-			{ name = "buffer", priority = 300, keyword_length = 3 },
-			{ name = "path", priority = 200 },
-		},
+			sources = {
+				{ name = "nvim_lsp", priority = 1000 },
+				{ name = "codeium", priority = 750 },
+				{ name = "luasnip", priority = 500 },
+				{ name = "nvim_lua", priority = 400 },
+				{ name = "buffer", priority = 300, keyword_length = 3 },
+				{ name = "path", priority = 200 },
+			},
 			confirm_opts = {
 				behavior = cmp.ConfirmBehavior.Replace,
 				select = false,
@@ -134,12 +126,11 @@ return {
 				}),
 			},
 			experimental = {
-				ghost_text = {
-					enabled = true,
-				},
+				ghost_text = true,
 			},
 		})
 
+		-- Cmdline `:` completion
 		cmp.setup.cmdline(":", {
 			mapping = cmp.mapping.preset.cmdline(),
 			sources = { {
@@ -158,6 +149,14 @@ return {
 					vim_item.kind = string.format("%s %s", kind_icons[vim_item.kind], vim_item.kind)
 					return vim_item
 				end,
+			},
+		})
+
+		-- Search `/` and `?` completion
+		cmp.setup.cmdline({ "/", "?" }, {
+			mapping = cmp.mapping.preset.cmdline(),
+			sources = {
+				{ name = "buffer" },
 			},
 		})
 	end,

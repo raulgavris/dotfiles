@@ -1,7 +1,6 @@
 return {
 	{
 		"goolord/alpha-nvim",
-		lazy = true,
 		event = "VimEnter",
 		opts = function()
 			local dashboard = require("alpha.themes.dashboard")
@@ -47,13 +46,14 @@ return {
 			dashboard.section.header.val = vim.split(logo .. "\n" .. greeting, "\n")
 			dashboard.section.buttons.val = {
 				dashboard.button("1", " " .. " New file", ":ene <BAR> startinsert <CR>"),
-				dashboard.button("2", " " .. " Find project", ":Telescope project <CR>"),
-				dashboard.button("3", " " .. " Find file", ":Telescope find_files <CR>"),
-				dashboard.button("4", "󰷾 " .. " Find text", ":Telescope live_grep <CR>"),
-				dashboard.button("5", " " .. " File browser", ":Neotree toggle <CR>"),
-				dashboard.button("6", "󰄉 " .. " Recent files", ":Telescope oldfiles <CR>"),
-				dashboard.button("7", " " .. " Config", ":e $MYVIMRC <CR>"),
-				dashboard.button("8", "󰒲 " .. " Lazy", ":Lazy<CR>"),
+				dashboard.button("2", " " .. " Open workspace", ":WorkspaceSelect<CR>"),
+				dashboard.button("3", " " .. " Find project", ":Telescope project <CR>"),
+				dashboard.button("4", " " .. " Find file", ":Telescope find_files <CR>"),
+				dashboard.button("5", "󰷾 " .. " Find text", ":Telescope live_grep <CR>"),
+				dashboard.button("6", " " .. " File browser", ":Neotree toggle <CR>"),
+				dashboard.button("7", "󰄉 " .. " Recent files", ":Telescope oldfiles <CR>"),
+				dashboard.button("8", " " .. " Config", ":e $MYVIMRC <CR>"),
+				dashboard.button("9", "󰒲 " .. " Lazy", ":Lazy<CR>"),
 				dashboard.button("q", " " .. " Quit", ":qa<CR>"),
 			}
 

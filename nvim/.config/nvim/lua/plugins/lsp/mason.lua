@@ -24,8 +24,8 @@ return {
 				-- Lua (for Neovim config)
 				"lua_ls",
 				-- Docker
-				-- "dockerls",
-				-- "docker_compose_language_service",
+				"dockerls",
+				"docker_compose_language_service",
 				-- GraphQL/Prisma
 				-- "graphql",
 				-- "prismals",
@@ -47,7 +47,6 @@ return {
 		opts = {
 			ensure_installed = {
 				"prettier",
-				"eslint_d",
 				-- Lua (for Neovim config)
 				"stylua",
 				-- Python (commented out)

@@ -104,6 +104,8 @@ eval "$(zoxide init zsh)"
 # ============================================
 # ⌨️ ALIASES
 # ============================================
+
+alias claude='CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --allow-dangerously-skip-permissions'
 ## Navigation
 alias cd='z'                    # Use zoxide instead of cd
 alias ..='cd ..'
@@ -118,8 +120,6 @@ alias l='ls -lh'
 ## Editor
 alias vim='nvim'
 alias v='nvim'
-alias code='agy'
-alias cursor='agy'
 
 ## Tmux
 alias t='~/.tmux/attach-or-create.sh'
@@ -249,8 +249,9 @@ fi
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# Added by Antigravity
-export PATH="/Users/raulgavris/.antigravity/antigravity/bin:$PATH"
 
-# Added by Antigravity
-export PATH="/Users/raulgavris/.antigravity/antigravity/bin:$PATH"
+# Added by Antigravity CLI installer
+export PATH="/Users/raulgavris/.local/bin:$PATH"
+
+# Added by Antigravity IDE
+export PATH="/Users/raulgavris/.antigravity-ide/antigravity-ide/bin:$PATH"

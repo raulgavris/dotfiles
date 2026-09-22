@@ -26,11 +26,23 @@ return {
 			},
 		})
 
+		-- Enable inlay hints globally (parameter names, inferred types)
+		vim.lsp.inlay_hint.enable(true)
+
+		-- Enable code lens globally. vim.lsp.codelens.enable handles auto-refresh
+		-- on its own, so no BufEnter/InsertLeave autocmd is needed.
+		-- (Neovim 0.12 deprecated vim.lsp.codelens.refresh() in favor of enable().)
+		vim.lsp.codelens.enable(true)
+
 		-- Global config for all LSP servers
 		vim.lsp.config("*", {
 			capabilities = cmp_nvim_lsp.default_capabilities(),
 			on_attach = function(client, bufnr)
 				require("illuminate").on_attach(client)
+				-- Signature help: show parameter info when typing function args (Ctrl+s in insert mode)
+				if client:supports_method("textDocument/signatureHelp") then
+					vim.keymap.set("i", "<C-s>", vim.lsp.buf.signature_help, { buffer = bufnr, desc = "Signature help" })
+				end
 			end,
 		})
 
@@ -76,9 +88,39 @@ return {
 			},
 		})
 
-		-- ESLint for React/Node projects
+		-- ESLint for React/Node projects.
+		-- Only attach when an ESLint config exists AND the eslint library is
+		-- actually installed in node_modules — otherwise the server errors with
+		-- "Unable to find ESLint library" in Biome-only projects or projects
+		-- with a stale eslint.config.js left over from a Biome migration.
 		vim.lsp.config("eslint", {
 			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+			root_dir = function(bufnr, on_dir)
+				local fname = vim.api.nvim_buf_get_name(bufnr)
+				local config_root = vim.fs.root(fname, {
+					".eslintrc",
+					".eslintrc.js",
+					".eslintrc.cjs",
+					".eslintrc.yaml",
+					".eslintrc.yml",
+					".eslintrc.json",
+					"eslint.config.js",
+					"eslint.config.mjs",
+					"eslint.config.cjs",
+					"eslint.config.ts",
+					"eslint.config.mts",
+					"eslint.config.cts",
+				})
+				if not config_root then
+					return
+				end
+				-- Walk up from config_root to find node_modules/eslint (handles hoisted monorepos).
+				local lib = vim.fs.find("node_modules/eslint", { path = config_root, upward = true, type = "directory" })[1]
+				if not lib then
+					return
+				end
+				on_dir(config_root)
+			end,
 			settings = {
 				workingDirectories = { mode = "auto" },
 			},
@@ -130,9 +172,9 @@ return {
 			"yamlls",
 			-- Lua (for Neovim config)
 			"lua_ls",
-			-- Docker (uncomment if needed)
-			-- "dockerls",
-			-- "docker_compose_language_service",
+			-- Docker
+			"dockerls",
+			"docker_compose_language_service",
 			-- GraphQL/Prisma (uncomment if needed)
 			-- "graphql",
 			-- "prismals",
